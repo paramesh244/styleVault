@@ -22,7 +22,7 @@ async function getModel() {
   const { key: apiKey } = await getApiKey();
   if (!apiKey) throw new Error('API key not set. Please add your Gemini API key in Settings or .env file.');
   genAI = new GoogleGenerativeAI(apiKey);
-  model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-04-17' });
+  model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
   return model;
 }
 
@@ -36,7 +36,7 @@ export function resetModel() {
 export async function validateApiKey(apiKey) {
   try {
     const testAI = new GoogleGenerativeAI(apiKey);
-    const testModel = testAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-04-17' });
+    const testModel = testAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
     const result = await testModel.generateContent('Say "hello" in one word.');
     const text = result.response.text();
     return text.length > 0;
