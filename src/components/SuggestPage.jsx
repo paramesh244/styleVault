@@ -7,7 +7,6 @@ import OutfitCard from './OutfitCard';
 const OCCASIONS = [
   { id: 'casual', label: 'Casual Day', icon: '😎' },
   { id: 'work', label: 'Work / Office', icon: '💼' },
-  { id: 'date', label: 'Date Night', icon: '❤️' },
   { id: 'party', label: 'Party', icon: '🎉' },
   { id: 'wedding', label: 'Wedding', icon: '💒' },
   { id: 'outdoor', label: 'Outdoor', icon: '🌿' },

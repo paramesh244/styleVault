@@ -22,7 +22,7 @@ async function getModel() {
   const { key: apiKey } = await getApiKey();
   if (!apiKey) throw new Error('API key not set. Please add your Gemini API key in Settings or .env file.');
   genAI = new GoogleGenerativeAI(apiKey);
-  model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+  model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
   return model;
 }
 
@@ -36,7 +36,7 @@ export function resetModel() {
 export async function validateApiKey(apiKey) {
   try {
     const testAI = new GoogleGenerativeAI(apiKey);
-    const testModel = testAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+    const testModel = testAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const result = await testModel.generateContent('Say "hello" in one word.');
     const text = result.response.text();
     return text.length > 0;
@@ -177,8 +177,9 @@ ${JSON.stringify(previousSuggestions, null, 2)}
 
 USER'S FOLLOW-UP: "${userMessage}"
 
-Respond naturally and helpfully. If suggesting outfit changes, reference items by their [ID:X]. Keep the response concise and practical. Do NOT wrap in JSON - just respond in plain text.`;
+Respond naturally and helpfully. If suggesting outfit changes, reference items by their name (dont mention IDs). Keep the response concise and practical. Do NOT wrap in JSON - just respond in plain text.`;
 
   const result = await m.generateContent(prompt);
+  console.log('Chat follow-up raw response:', result);
   return result.response.text();
 }
