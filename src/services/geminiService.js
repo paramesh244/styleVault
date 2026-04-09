@@ -172,6 +172,7 @@ export async function chatFollowUp(wardrobeDescription, previousSuggestions, use
 WARDROBE CONTEXT:
 ${wardrobeDescription}
 
+
 PREVIOUS SUGGESTIONS:
 ${JSON.stringify(previousSuggestions, null, 2)}
 
