@@ -4,9 +4,10 @@ import { addClothing, blobToDataURL, createThumbnail } from '../db';
 import { analyzeClothing } from '../services/geminiService';
 
 const CLOTHING_TYPES = ['tops', 'bottoms', 'dresses', 'outerwear', 'shoes', 'accessories'];
-const OCCASIONS = ['everyday', 'work', 'date', 'party', 'wedding', 'workout', 'outdoor', 'travel', 'beach'];
+const OCCASIONS = ['everyday', 'work', 'date night', 'party', 'wedding', 'workout', 'outdoor adventure', 'travel', 'beach', 'brunch', 'job interview', 'concert'];
 const SEASONS = ['spring', 'summer', 'fall', 'winter'];
-const FORMALITY_LEVELS = ['very casual', 'casual', 'smart casual', 'business', 'formal'];
+const FORMALITY_LEVELS = ['very casual', 'casual', 'smart casual', 'business casual', 'business', 'formal', 'black tie'];
+const FIT_OPTIONS = ['slim', 'regular', 'relaxed', 'oversized', 'tailored', 'cropped', 'flared', 'skinny', 'straight', 'a-line'];
 
 export default function AddClothingPage({ onClothingAdded, hasApiKey, onOpenSettings, showToast }) {
   const [imageDataUrl, setImageDataUrl] = useState(null);
@@ -23,8 +24,12 @@ export default function AddClothingPage({ onClothingAdded, hasApiKey, onOpenSett
     pattern: '',
     material: '',
     formality: 'casual',
+    fit: 'regular',
     seasons: [],
     occasions: [],
+    versatility: 0,
+    pairsWith: [],
+    careInstructions: '',
     description: '',
   });
 
@@ -82,8 +87,12 @@ export default function AddClothingPage({ onClothingAdded, hasApiKey, onOpenSett
         pattern: analysis.pattern || '',
         material: analysis.material || '',
         formality: analysis.formality || 'casual',
+        fit: analysis.fit || 'regular',
         seasons: analysis.seasons || [],
         occasions: analysis.occasions || [],
+        versatility: analysis.versatility || 0,
+        pairsWith: analysis.pairsWith || [],
+        careInstructions: analysis.careInstructions || '',
         description: analysis.description || '',
       });
       setAnalyzed(true);
@@ -194,7 +203,8 @@ export default function AddClothingPage({ onClothingAdded, hasApiKey, onOpenSett
                 setAnalyzed(false);
                 setForm({
                   name: '', type: 'tops', subType: '', colors: [], pattern: '',
-                  material: '', formality: 'casual', seasons: [], occasions: [], description: '',
+                  material: '', formality: 'casual', fit: 'regular', seasons: [], occasions: [],
+                  versatility: 0, pairsWith: [], careInstructions: '', description: '',
                 });
               }}
             >
@@ -320,6 +330,21 @@ export default function AddClothingPage({ onClothingAdded, hasApiKey, onOpenSett
           </div>
 
           <div className="input-group">
+            <label className="input-label">Fit</label>
+            <select
+              className="input-field"
+              value={form.fit}
+              onChange={(e) => updateForm('fit', e.target.value)}
+            >
+              {FIT_OPTIONS.map((f) => (
+                <option key={f} value={f}>
+                  {f.charAt(0).toUpperCase() + f.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="input-group">
             <label className="input-label">Seasons</label>
             <div className="chip-group">
               {SEASONS.map((s) => (
@@ -359,6 +384,35 @@ export default function AddClothingPage({ onClothingAdded, hasApiKey, onOpenSett
               rows={3}
             />
           </div>
+
+          {/* AI-generated extra fields (read-only display) */}
+          {analyzed && form.versatility > 0 && (
+            <div style={{
+              padding: '10px 14px',
+              background: 'rgba(168, 85, 247, 0.06)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid rgba(168, 85, 247, 0.1)',
+              marginBottom: 12,
+              fontSize: '0.85rem',
+              color: 'var(--text-secondary)',
+              lineHeight: 1.6,
+            }}>
+              <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>✨ AI Insights</div>
+              <div style={{ marginBottom: 4 }}>
+                <strong>Versatility:</strong> {form.versatility}/10 — {form.versatility >= 7 ? 'A wardrobe workhorse!' : form.versatility >= 4 ? 'Good for several looks' : 'Statement piece'}
+              </div>
+              {form.pairsWith && form.pairsWith.length > 0 && (
+                <div style={{ marginBottom: 4 }}>
+                  <strong>Pairs well with:</strong> {form.pairsWith.join(', ')}
+                </div>
+              )}
+              {form.careInstructions && (
+                <div>
+                  <strong>Care:</strong> {form.careInstructions}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Save Button */}
           <button

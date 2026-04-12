@@ -1,90 +1,171 @@
-import Dexie from 'dexie';
+// ===================================================================
+// StyleVault Database Layer — MongoDB via REST API (Vercel Serverless)
+// Includes Firebase Auth token in every request.
+// ===================================================================
 
-const db = new Dexie('StyleVaultDB');
+import { auth, isFirebaseConfigured } from './firebase';
 
-db.version(1).stores({
-  clothes: '++id, name, type, subType, formality, createdAt',
-  outfits: '++id, name, occasion, savedAt',
-  settings: 'key',
-});
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
+async function getAuthHeaders() {
+  if (!isFirebaseConfigured || !auth || !auth.currentUser) {
+    // Dev mode — send a dev token
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer dev-token',
+    };
+  }
+  const token = await auth.currentUser.getIdToken();
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
+  };
+}
+
+async function apiFetch(path, options = {}) {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers,
+    ...options,
+    // Merge any custom headers (but auth always present)
+    ...(options.body ? { body: options.body } : {}),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || 'API request failed');
+  }
+  return res.json();
+}
 
 // ===== Clothing CRUD =====
 
 export async function addClothing(clothingData) {
-  const id = await db.clothes.add({
-    ...clothingData,
-    createdAt: Date.now(),
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_BASE}/clothes`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(clothingData),
   });
-  return id;
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || 'Failed to add clothing');
+  }
+  const item = await res.json();
+  return item.id;
 }
 
 export async function getAllClothing() {
-  return db.clothes.orderBy('createdAt').reverse().toArray();
+  return apiFetch('/clothes');
 }
 
 export async function getClothingById(id) {
-  return db.clothes.get(id);
+  try {
+    return await apiFetch(`/clothes/${id}`);
+  } catch {
+    return null;
+  }
 }
 
 export async function updateClothing(id, updates) {
-  return db.clothes.update(id, updates);
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_BASE}/clothes/${id}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(updates),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || 'Failed to update clothing');
+  }
+  return res.json();
 }
 
 export async function deleteClothing(id) {
-  // Also remove from any saved outfits
-  const outfits = await db.outfits.toArray();
-  for (const outfit of outfits) {
-    if (outfit.clothingIds && outfit.clothingIds.includes(id)) {
-      const newIds = outfit.clothingIds.filter(cid => cid !== id);
-      if (newIds.length < 2) {
-        await db.outfits.delete(outfit.id);
-      } else {
-        await db.outfits.update(outfit.id, { clothingIds: newIds });
-      }
-    }
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_BASE}/clothes/${id}`, {
+    method: 'DELETE',
+    headers,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || 'Failed to delete clothing');
   }
-  return db.clothes.delete(id);
+  return res.json();
 }
 
 export async function getClothingCount() {
-  return db.clothes.count();
+  const data = await apiFetch('/clothes/count');
+  return data.count;
 }
 
 // ===== Outfit CRUD =====
 
 export async function saveOutfit(outfitData) {
-  const id = await db.outfits.add({
-    ...outfitData,
-    savedAt: Date.now(),
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_BASE}/outfits`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(outfitData),
   });
-  return id;
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || 'Failed to save outfit');
+  }
+  const outfit = await res.json();
+  return outfit.id;
 }
 
 export async function getAllOutfits() {
-  return db.outfits.orderBy('savedAt').reverse().toArray();
+  return apiFetch('/outfits');
 }
 
 export async function deleteOutfit(id) {
-  return db.outfits.delete(id);
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_BASE}/outfits/${id}`, {
+    method: 'DELETE',
+    headers,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || 'Failed to delete outfit');
+  }
+  return res.json();
 }
 
 // ===== Settings =====
 
 export async function setSetting(key, value) {
-  return db.settings.put({ key, value });
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_BASE}/settings/${key}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify({ value }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || 'Failed to set setting');
+  }
+  return res.json();
 }
 
 export async function getSetting(key) {
-  const result = await db.settings.get(key);
-  return result ? result.value : null;
+  const data = await apiFetch(`/settings/${key}`);
+  return data.value;
 }
 
 // ===== Helpers =====
 
 export async function clearAllData() {
-  await db.clothes.clear();
-  await db.outfits.clear();
-  await db.settings.clear();
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_BASE}/data`, {
+    method: 'DELETE',
+    headers,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || 'Failed to clear data');
+  }
+  return res.json();
 }
 
 // Convert a File/Blob to a base64 data URL for storage
@@ -113,5 +194,3 @@ export function createThumbnail(dataUrl, maxSize = 200) {
     img.src = dataUrl;
   });
 }
-
-export default db;

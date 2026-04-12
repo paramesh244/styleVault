@@ -61,7 +61,7 @@ export default function SuggestPage({ hasApiKey, clothingCount, onOpenSettings, 
       if (result.outfits) {
         const enriched = result.outfits.map((outfit) => {
           const items = (outfit.itemIds || [])
-            .map((id) => clothing.find((c) => c.id === id))
+            .map((id) => clothing.find((c) => String(c.id) === String(id)))
             .filter(Boolean);
           return { ...outfit, items };
         });
@@ -91,7 +91,7 @@ export default function SuggestPage({ hasApiKey, clothingCount, onOpenSettings, 
       if (result.outfits) {
         const enriched = result.outfits.map((outfit) => {
           const items = (outfit.itemIds || [])
-            .map((id) => clothing.find((c) => c.id === id))
+            .map((id) => clothing.find((c) => String(c.id) === String(id)))
             .filter(Boolean);
           return { ...outfit, items };
         });
@@ -108,10 +108,13 @@ export default function SuggestPage({ hasApiKey, clothingCount, onOpenSettings, 
     try {
       await saveOutfit({
         name: outfit.name,
-        clothingIds: outfit.itemIds || [],
+        clothingIds: (outfit.itemIds || []).map(String),
         occasion: selectedOccasion || customRequest,
         aiReasoning: outfit.reasoning,
         styleNotes: outfit.styleNotes,
+        confidence: outfit.confidence || 0,
+        colorStory: outfit.colorStory || '',
+        missingPieces: outfit.missingPieces || [],
       });
       showToast('Outfit saved! 💾');
     } catch (err) {
