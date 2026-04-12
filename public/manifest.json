@@ -1,11 +1,11 @@
 {
-  "name": "StyleVault",
-  "short_name": "StyleVault",
-  "description": "AI-powered wardrobe manager with smart outfit suggestions",
+  "name": "AURA AI Stylist",
+  "short_name": "AURA",
+  "description": "The Future of Dressing. Your Personal AI Stylist.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a0f",
-  "theme_color": "#0a0a0f",
+  "background_color": "#FDFDFD",
+  "theme_color": "#C5A059",
   "orientation": "portrait",
   "icons": [
     {
