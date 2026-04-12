@@ -1,17 +1,15 @@
 import { useState, useEffect } from 'react';
-import { IoSparkles, IoShuffle, IoBookmarkOutline, IoSend } from 'react-icons/io5';
-import { getAllClothing, saveOutfit, getClothingById } from '../db';
+import { getAllClothing, saveOutfit } from '../db';
 import { suggestOutfits, chatFollowUp } from '../services/geminiService';
 import OutfitCard from './OutfitCard';
 
 const OCCASIONS = [
-  { id: 'casual', label: 'Casual Day', icon: '😎' },
-  { id: 'work', label: 'Work / Office', icon: '💼' },
-  { id: 'party', label: 'Party', icon: '🎉' },
-  { id: 'wedding', label: 'Wedding', icon: '💒' },
-  { id: 'outdoor', label: 'Outdoor', icon: '🌿' },
-  { id: 'workout', label: 'Workout', icon: '💪' },
-  { id: 'travel', label: 'Travel', icon: '✈️' },
+  { id: 'casual', label: 'Casual Day', icon: 'lucide:coffee' },
+  { id: 'work', label: 'Work / Office', icon: 'lucide:briefcase' },
+  { id: 'party', label: 'Party', icon: 'lucide:glass-water' },
+  { id: 'wedding', label: 'Wedding Gala', icon: 'lucide:sparkles' },
+  { id: 'outdoor', label: 'Outdoor', icon: 'lucide:anchor' },
+  { id: 'date', label: 'Date Night', icon: 'lucide:heart' },
 ];
 
 export default function SuggestPage({ hasApiKey, clothingCount, onOpenSettings, onAddClick, showToast }) {
@@ -21,6 +19,7 @@ export default function SuggestPage({ hasApiKey, clothingCount, onOpenSettings, 
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState(null);
   const [enrichedOutfits, setEnrichedOutfits] = useState([]);
+  
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
@@ -57,7 +56,6 @@ export default function SuggestPage({ hasApiKey, clothingCount, onOpenSettings, 
       const result = await suggestOutfits(clothing, request);
       setSuggestions(result);
 
-      // Enrich outfits with clothing data
       if (result.outfits) {
         const enriched = result.outfits.map((outfit) => {
           const items = (outfit.itemIds || [])
@@ -68,37 +66,7 @@ export default function SuggestPage({ hasApiKey, clothingCount, onOpenSettings, 
         setEnrichedOutfits(enriched);
       }
     } catch (err) {
-      console.error('Suggestion failed:', err);
       showToast(err.message || 'Failed to get suggestions. Try again.', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleShuffle() {
-    const occasion = selectedOccasion
-      ? OCCASIONS.find(o => o.id === selectedOccasion)?.label
-      : customRequest;
-    const request = `Give me DIFFERENT outfit suggestions for: ${occasion || 'a nice outing'}. Don't repeat previous combinations.`;
-    setCustomRequest(request);
-    setLoading(true);
-    setSuggestions(null);
-    setEnrichedOutfits([]);
-
-    try {
-      const result = await suggestOutfits(clothing, request);
-      setSuggestions(result);
-      if (result.outfits) {
-        const enriched = result.outfits.map((outfit) => {
-          const items = (outfit.itemIds || [])
-            .map((id) => clothing.find((c) => String(c.id) === String(id)))
-            .filter(Boolean);
-          return { ...outfit, items };
-        });
-        setEnrichedOutfits(enriched);
-      }
-    } catch (err) {
-      showToast(err.message || 'Shuffle failed', 'error');
     } finally {
       setLoading(false);
     }
@@ -114,7 +82,6 @@ export default function SuggestPage({ hasApiKey, clothingCount, onOpenSettings, 
         styleNotes: outfit.styleNotes,
         confidence: outfit.confidence || 0,
         colorStory: outfit.colorStory || '',
-        missingPieces: outfit.missingPieces || [],
       });
       showToast('Outfit saved! 💾');
     } catch (err) {
@@ -138,186 +105,214 @@ export default function SuggestPage({ hasApiKey, clothingCount, onOpenSettings, 
     } catch (err) {
       setChatMessages((prev) => [
         ...prev,
-        { role: 'ai', text: 'Sorry, I had trouble responding. Please try again.' },
+        { role: 'ai', text: 'Apologies, I encountered an error. Please try again.' },
       ]);
     } finally {
       setChatLoading(false);
     }
   }
 
-  // Not enough items
   if (clothingCount < 2) {
     return (
-      <div className="empty-state">
-        <div className="empty-state__icon">✨</div>
-        <h2 className="empty-state__title">Add More Clothes First</h2>
-        <p className="empty-state__text">
-          You need at least 2 clothing items for outfit suggestions. Currently have {clothingCount}.
+      <div className="px-6 py-12 flex flex-col items-center justify-center text-center h-full">
+        <iconify-icon icon="lucide:sparkles" class="text-4xl text-[#C5A059] mb-4 opacity-50"></iconify-icon>
+        <h2 className="text-xl font-bold editorial-font mb-2">Vault is too sparse</h2>
+        <p className="text-gray-500 text-sm mb-8">
+          Upload at least 2 items so AURA can compose an outfit logic.
         </p>
-        <button className="btn btn--primary btn--lg" onClick={onAddClick}>
-          + Add Clothes
+        <button onClick={onAddClick} className="px-8 py-4 bg-[#1A1A1A] text-white text-[10px] uppercase tracking-widest font-bold">
+          Start Capturing
         </button>
       </div>
     );
   }
 
-  return (
-    <div>
-      <h1 className="page-title">Style Suggest</h1>
-      <p className="page-subtitle">Tell me where you're going ✨</p>
+  // Suggestion Results View
+  if (suggestions && !loading) {
+    const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return (
+      <>
+        <header className="px-6 pt-4 pb-2 flex justify-between items-end border-b border-gray-50 bg-white sticky top-0 z-10">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400 mb-1">Today's Edit</p>
+            <h2 className="text-xl font-bold editorial-font italic">{today}</h2>
+          </div>
+          <div className="flex items-center gap-2 text-right">
+            <button 
+              onClick={() => {
+                setSuggestions(null);
+                setEnrichedOutfits([]);
+                setSelectedOccasion(null);
+                setCustomRequest('');
+                setChatMessages([]);
+              }}
+              className="px-4 py-2 bg-gray-50 text-[10px] uppercase tracking-widest font-bold border border-gray-200 text-gray-600"
+            >
+              Change Focus
+            </button>
+          </div>
+        </header>
 
-      {/* Occasion Grid */}
-      {!suggestions && !loading && (
-        <>
-          <div className="occasion-grid">
-            {OCCASIONS.map((occ) => (
-              <button
-                key={occ.id}
-                className={`occasion-card ${selectedOccasion === occ.id ? 'occasion-card--active' : ''}`}
-                onClick={() => {
-                  setSelectedOccasion(selectedOccasion === occ.id ? null : occ.id);
-                  setCustomRequest('');
-                }}
-              >
-                <div className="occasion-card__icon">{occ.icon}</div>
-                <div className="occasion-card__label">{occ.label}</div>
-              </button>
+        <section className="px-6 py-8 pb-32">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-[32px] font-black leading-none editorial-font">Curated<br/><span className="italic">Looks</span></h1>
+          </div>
+
+          {suggestions.generalAdvice && (
+            <div className="mb-8 p-4 border border-[#C5A059]/20 bg-[#C5A059]/5 flex items-start gap-3">
+              <iconify-icon icon="lucide:sparkles" class="text-[#C5A059] mt-1 flex-shrink-0"></iconify-icon>
+              <p className="text-sm text-gray-800 leading-relaxed italic">
+                {suggestions.generalAdvice}
+              </p>
+            </div>
+          )}
+
+          <div className="space-y-12 mb-12">
+            {enrichedOutfits.map((outfit, i) => (
+              <OutfitCard key={i} outfit={outfit} onSave={() => handleSaveOutfit(outfit)} />
             ))}
           </div>
 
-          <div className="divider" />
+          {/* Follow-up Chat Section */}
+          <div className="mt-8 border-t border-gray-100 pt-8">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-[#1A1A1A] mb-6 flex items-center gap-2">
+              <iconify-icon icon="lucide:message-square" class="text-[#C5A059]"></iconify-icon>
+              Style Consultant
+            </h3>
 
-          <div className="input-group">
-            <label className="input-label">Or describe the situation</label>
-            <textarea
-              className="input-field"
+            <div className="space-y-4 mb-6">
+              {chatMessages.map((msg, i) => (
+                <div key={i} className={`p-4 text-sm ${msg.role === 'user' ? 'bg-[#F8F4EA] border border-[#C5A059]/20 ml-8' : 'bg-gray-50 border border-gray-100 mr-8'}`}>
+                  {msg.role === 'user' ? (
+                     <p className="text-[#1A1A1A] font-bold">{msg.text}</p>
+                  ) : (
+                     <p className="text-gray-600 leading-relaxed italic">"{msg.text}"</p>
+                  )}
+                </div>
+              ))}
+              
+              {chatLoading && (
+                <div className="p-4 bg-gray-50 border border-gray-100 mr-8 flex items-center gap-2 text-gray-400">
+                  <iconify-icon icon="lucide:loader" class="animate-spin text-[#C5A059]"></iconify-icon>
+                  <span className="text-xs uppercase font-bold tracking-widest text-[#1A1A1A]">Consulting AURA...</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <input
+                className="flex-1 p-4 bg-white border border-gray-200 focus:border-[#C5A059] outline-none text-sm transition-colors"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleChat()}
+                placeholder="Ask about layering, weather..."
+              />
+              <button
+                className="w-14 h-14 bg-[#1A1A1A] text-white flex items-center justify-center disabled:opacity-50"
+                onClick={handleChat}
+                disabled={chatLoading || !chatInput.trim()}
+              >
+                <iconify-icon icon="lucide:arrow-right" class="text-xl"></iconify-icon>
+              </button>
+            </div>
+          </div>
+
+          <button 
+            onClick={handleSuggest} 
+            className="w-full py-6 mt-12 flex flex-col items-center justify-center border-2 border-dashed border-gray-100 group"
+          >
+             <iconify-icon icon="lucide:refresh-cw" class="text-[#C5A059] text-xl mb-2 group-active:rotate-180 transition-transform duration-500"></iconify-icon>
+             <span className="text-[10px] uppercase font-bold tracking-[0.3em] text-gray-400">Refresh Edits</span>
+          </button>
+        </section>
+      </>
+    );
+  }
+
+  // Loading View
+  if (loading) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center p-6 text-center mt-20">
+        <div className="w-16 h-16 rounded-full border border-[#C5A059]/30 flex items-center justify-center mb-6 animate-pulse">
+          <iconify-icon icon="lucide:sparkles" class="text-2xl text-[#C5A059] animate-spin" style={{ animationDuration: '3s' }}></iconify-icon>
+        </div>
+        <h2 className="text-2xl editorial-font font-bold mb-2">Curating...</h2>
+        <p className="text-gray-400 text-sm italic">Analyzing {clothing.length} pieces to find the perfect edit.</p>
+      </div>
+    );
+  }
+
+  // Request/Prompt View
+  return (
+    <div className="px-6 pt-6 pb-32">
+      <header className="mb-10">
+        <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A059] font-bold mb-3 block">Style Guidance</span>
+        <h1 className="text-4xl leading-tight font-black tracking-tight mb-2 editorial-font">
+          What's the <br/><span className="italic">Occasion?</span>
+        </h1>
+        <p className="text-gray-500 text-sm leading-relaxed">
+          Tell us where you're headed for a curated look.
+        </p>
+      </header>
+
+      <div className="grid grid-cols-2 gap-4 mb-12">
+        {OCCASIONS.map((occ) => (
+          <button 
+            key={occ.id}
+            onClick={() => {
+              setSelectedOccasion(selectedOccasion === occ.id ? null : occ.id);
+              setCustomRequest('');
+            }}
+            className={`flex flex-col items-start p-5 border transition-all duration-300 ${
+              selectedOccasion === occ.id 
+                ? 'bg-[#F8F4EA] border-[#C5A059]' 
+                : 'bg-white border-gray-100'
+            }`}
+          >
+            <iconify-icon icon={occ.icon} class="text-[#C5A059] text-xl mb-4"></iconify-icon>
+            <span className="text-xs uppercase font-bold tracking-widest">{occ.label}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="flex items-center gap-4 mb-10">
+        <div className="flex-1 h-[1px] bg-gray-100"></div>
+        <span className="text-[10px] uppercase font-bold tracking-[0.3em] text-gray-300">OR</span>
+        <div className="flex-1 h-[1px] bg-gray-100"></div>
+      </div>
+
+      <section className="space-y-6">
+        <div className="space-y-3">
+          <h2 className="editorial-font text-lg font-bold italic text-[#1A1A1A]">Custom Request</h2>
+          <div className="relative">
+            <textarea 
               value={customRequest}
               onChange={(e) => {
                 setCustomRequest(e.target.value);
                 setSelectedOccasion(null);
               }}
-              placeholder="e.g., Job interview at a tech startup, slightly cool spring day..."
-              rows={3}
-              id="occasion-input"
-            />
-          </div>
-
-          <button
-            className="btn btn--primary btn--full btn--lg"
-            onClick={handleSuggest}
-            disabled={!selectedOccasion && !customRequest.trim()}
-            id="suggest-btn"
-          >
-            <IoSparkles /> Get AI Suggestions
-          </button>
-        </>
-      )}
-
-      {/* Loading */}
-      {loading && (
-        <div className="ai-loading">
-          <div className="ai-loading__sparkle">✨</div>
-          <div className="spinner spinner--lg" />
-          <div className="ai-loading__text">
-            AI is styling your wardrobe...
-          </div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            Analyzing {clothing.length} items
+              placeholder="e.g. A gallery opening in Soho, it's raining but warm..."
+              className="w-full h-32 p-4 bg-gray-50 border border-gray-100 focus:border-[#C5A059] outline-none text-sm leading-relaxed transition-colors resize-none"
+            ></textarea>
           </div>
         </div>
-      )}
 
-      {/* Results */}
-      {suggestions && !loading && (
-        <>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>
-              Outfit Suggestions
-            </h2>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn btn--ghost" onClick={handleShuffle}>
-                <IoShuffle /> Shuffle
-              </button>
-              <button
-                className="btn btn--ghost"
-                onClick={() => {
-                  setSuggestions(null);
-                  setEnrichedOutfits([]);
-                  setChatMessages([]);
-                  setCustomRequest('');
-                  setSelectedOccasion(null);
-                }}
-              >
-                New
-              </button>
-            </div>
-          </div>
+        <button 
+          onClick={handleSuggest}
+          disabled={!selectedOccasion && !customRequest.trim()}
+          className="w-full h-14 bg-[#1A1A1A] text-white flex items-center justify-center gap-3 font-bold tracking-[0.2em] text-[10px] uppercase transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
+        >
+          Get AI Suggestion
+          <iconify-icon icon="lucide:wand-2" class="text-sm text-[#C5A059]"></iconify-icon>
+        </button>
+      </section>
 
-          {/* General Advice */}
-          {suggestions.generalAdvice && (
-            <div style={{
-              padding: 14,
-              background: 'rgba(168, 85, 247, 0.08)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid rgba(168, 85, 247, 0.15)',
-              marginBottom: 16,
-              fontSize: '0.85rem',
-              color: 'var(--text-secondary)',
-              lineHeight: 1.6,
-            }}>
-              <span style={{ color: 'var(--text-accent)', fontWeight: 600 }}>💡 Style Tip:</span>{' '}
-              {suggestions.generalAdvice}
-            </div>
-          )}
-
-          {/* Outfit Cards */}
-          {enrichedOutfits.map((outfit, i) => (
-            <OutfitCard
-              key={i}
-              outfit={outfit}
-              onSave={() => handleSaveOutfit(outfit)}
-            />
-          ))}
-
-          {/* Follow-up Chat */}
-          <div className="divider" />
-          <h3 style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: 12 }}>
-            💬 Ask follow-up questions
-          </h3>
-
-          {chatMessages.map((msg, i) => (
-            <div key={i} className={`ai-message ${msg.role === 'user' ? 'ai-message--user' : ''}`}>
-              {msg.text}
-            </div>
-          ))}
-
-          {chatLoading && (
-            <div className="ai-message" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} />
-              Thinking...
-            </div>
-          )}
-
-          <div className="chat-input-row">
-            <input
-              className="input-field"
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleChat()}
-              placeholder="What if it rains? Make it more casual..."
-              id="chat-input"
-            />
-            <button
-              className="btn btn--primary"
-              onClick={handleChat}
-              disabled={chatLoading || !chatInput.trim()}
-              style={{ padding: '12px 14px' }}
-            >
-              <IoSend />
-            </button>
-          </div>
-        </>
-      )}
+      <div className="mt-12 flex items-start gap-4 p-4 border border-[#C5A059]/10 bg-[#C5A059]/5">
+        <iconify-icon icon="lucide:info" class="text-[#C5A059] mt-1"></iconify-icon>
+        <p className="text-[11px] text-[#1A1A1A] font-medium leading-tight italic">
+          Tip: Mentioning details like weather, venue, or mood helps AURA provide more accurate styling.
+        </p>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { IoShirtOutline, IoAddCircle, IoSparkles, IoBookmarkOutline, IoLogOutOutline, IoPersonCircleOutline } from 'react-icons/io5';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import LoginPage from './components/LoginPage';
 import WardrobePage from './components/WardrobePage';
@@ -13,16 +12,15 @@ import { getClothingCount } from './db';
 import { getApiKey } from './services/geminiService';
 
 const TABS = [
-  { id: 'wardrobe', label: 'Wardrobe', icon: IoShirtOutline },
-  { id: 'add', label: 'Add', icon: IoAddCircle },
-  { id: 'suggest', label: 'Suggest', icon: IoSparkles },
-  { id: 'saved', label: 'Saved', icon: IoBookmarkOutline },
+  { id: 'wardrobe', label: 'Vault', icon: 'lucide:layout-grid' },
+  { id: 'suggest', label: 'Suggest', icon: 'lucide:sparkles' },
+  { id: 'saved', label: 'Saved', icon: 'lucide:bookmark' },
 ];
 
 export default function App() {
   const { user, loading: authLoading, logout } = useAuth();
 
-  const [activeTab, setActiveTab] = useState('wardrobe');
+  const [activeTab, setActiveTab] = useState('wardrobe'); // wardrobe, add, suggest, saved
   const [showProfile, setShowProfile] = useState(false);
   const [selectedClothing, setSelectedClothing] = useState(null);
   const [toast, setToast] = useState(null);
@@ -48,11 +46,6 @@ export default function App() {
   }, [refreshKey, user]);
 
   async function checkApiKey() {
-    const { key } = await getApiKey();
-    setHasApiKey(!!key);
-  }
-
-  async function updateApiKeyStatus() {
     const { key } = await getApiKey();
     setHasApiKey(!!key);
   }
@@ -83,23 +76,13 @@ export default function App() {
     showToast('Item removed from wardrobe');
   }
 
-  async function handleLogout() {
-    try {
-      await logout();
-      setClothingCount(0);
-      setActiveTab('wardrobe');
-    } catch {
-      showToast('Failed to sign out', 'error');
-    }
-  }
-
   // Auth loading state
   if (authLoading) {
     return (
-      <div className="app-shell" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div className="spinner spinner--lg" style={{ margin: '0 auto 16px' }} />
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Loading StyleVault...</div>
+      <div className="w-full max-w-md mx-auto min-h-screen bg-[#FDFDFD] flex items-center justify-center">
+        <div className="text-center flex flex-col items-center">
+          <div className="spinner spinner--lg mb-4" />
+          <div className="text-gray-400 text-xs uppercase tracking-widest font-bold">Loading AURA...</div>
         </div>
       </div>
     );
@@ -107,7 +90,11 @@ export default function App() {
 
   // Not logged in — show login page
   if (!user) {
-    return <LoginPage />;
+    return (
+      <div className="w-full max-w-md mx-auto h-[100dvh] bg-[#FDFDFD] relative overflow-hidden flex flex-col">
+        <LoginPage />
+      </div>
+    );
   }
 
   function renderPage() {
@@ -118,6 +105,7 @@ export default function App() {
             key={refreshKey}
             onSelectClothing={setSelectedClothing}
             onAddClick={() => setActiveTab('add')}
+            clothingCount={clothingCount}
           />
         );
       case 'add':
@@ -153,90 +141,64 @@ export default function App() {
   }
 
   return (
-    <div className="app-shell">
-      {/* Header */}
-      <header className="app-header">
-        <div className="app-header__logo">
-          <div className="app-header__logo-icon">👔</div>
-          <span>StyleVault</span>
-        </div>
-        <div className="app-header__actions">
-          {clothingCount > 0 && (
-            <span className="badge" style={{ alignSelf: 'center', marginRight: 4 }}>
-              {clothingCount}
-            </span>
-          )}
-          <div 
-            onClick={() => setShowProfile(true)} 
-            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-            id="profile-trigger"
-          >
-            {user?.photoURL ? (
-              <img
-                src={user.photoURL}
-                alt="Profile"
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: '50%',
-                  border: '2px solid var(--border-light)',
-                }}
-                title={user.displayName || user.email}
-              />
-            ) : (
-              <div style={{ 
-                width: 32, 
-                height: 32, 
-                borderRadius: '50%', 
-                background: 'var(--bg-glass)', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                border: '1px solid var(--border-subtle)',
-                color: 'var(--text-secondary)',
-                fontSize: '1.2rem'
-              }}>
-                <IoPersonCircleOutline />
-              </div>
-            )}
-          </div>
-          <button
-            className="icon-btn"
-            onClick={() => setShowProfile(true)}
-            title="Sign out"
-            id="logout-btn"
-            style={{ width: 36, height: 36, fontSize: '1.1rem' }}
-          >
-            <IoLogOutOutline />
-          </button>
-        </div>
+    <div className="w-full max-w-md mx-auto h-[100dvh] bg-[#FDFDFD] flex flex-col relative overflow-hidden">
+      
+      {/* Header Nav */}
+      <header className="shrink-0 pt-14 px-6 flex justify-between items-center bg-white/95 backdrop-blur-md z-40">
+        <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('wardrobe'); }} className="text-2xl font-black tracking-tighter italic editorial-font">
+          AURA<span className="text-[#C5A059]">.</span>
+        </a>
+        <button 
+          onClick={() => setShowProfile(true)} 
+          className="w-10 h-10 flex flex-col items-center justify-center gap-1 group" 
+          aria-label="Profile"
+        >
+           {user?.photoURL ? (
+             <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full object-cover border border-gray-200" />
+           ) : (
+             <iconify-icon icon="lucide:user" class="text-2xl text-gray-800"></iconify-icon>
+           )}
+        </button>
       </header>
-      {/* Main Content */}
-      <main className="main-content">
+
+      {/* Main Content Area */}
+      <main className="flex-1 overflow-y-auto no-scrollbar relative">
         {renderPage()}
       </main>
 
+      {/* Floating Add Button (only show if not on 'add' tab) */}
+      {activeTab !== 'add' && (
+        <button 
+          onClick={() => setActiveTab('add')}
+          className="absolute bottom-28 right-6 z-50 w-14 h-14 bg-[#1A1A1A] text-white rounded-full flex items-center justify-center shadow-2xl transition-transform active:scale-95 border border-[#C5A059]/30"
+        >
+          <iconify-icon icon="lucide:plus" class="text-2xl"></iconify-icon>
+        </button>
+      )}
+
       {/* Bottom Navigation */}
-      <nav className="bottom-nav">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            id={`nav-${tab.id}`}
-            className={`bottom-nav__item ${activeTab === tab.id ? 'bottom-nav__item--active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            <tab.icon className="bottom-nav__item-icon" />
-            <span>{tab.label}</span>
-          </button>
-        ))}
+      <nav className="shrink-0 h-[84px] bg-white border-t border-gray-100 flex items-center justify-around px-4 pb-[34px] z-50">
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex flex-col items-center gap-1 transition-colors ${isActive ? 'text-[#C5A059]' : 'text-gray-400 hover:text-[#1A1A1A]'}`}
+            >
+              <iconify-icon icon={tab.icon} class="text-xl"></iconify-icon>
+              <span className={`text-[8px] uppercase tracking-widest ${isActive ? 'font-bold' : 'font-semibold'}`}>
+                {tab.label}
+              </span>
+            </button>
+          )
+        })}
       </nav>
 
       {/* Modals */}
       {showProfile && (
         <ProfileModal
-          onClose={() => {
-            setShowProfile(false);
-          }}
+          onClose={() => setShowProfile(false)}
           showToast={showToast}
         />
       )}

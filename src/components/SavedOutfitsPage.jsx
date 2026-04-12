@@ -14,7 +14,6 @@ export default function SavedOutfitsPage({ showToast }) {
     setLoading(true);
     const saved = await getAllOutfits();
 
-    // Enrich with clothing data
     const enriched = await Promise.all(
       saved.map(async (outfit) => {
         const items = await Promise.all(
@@ -42,40 +41,48 @@ export default function SavedOutfitsPage({ showToast }) {
 
   if (loading) {
     return (
-      <div>
-        <h1 className="page-title">Saved Outfits</h1>
-        <p className="page-subtitle">Loading...</p>
-        {[1, 2].map((i) => (
-          <div key={i} className="skeleton" style={{ height: 200, marginBottom: 16, borderRadius: 'var(--radius-xl)' }} />
-        ))}
+      <div className="px-6 pt-8 pb-4 h-full">
+        <h1 className="text-4xl font-black tracking-tight mb-6">Saved <span className="italic">Outfits</span></h1>
+        <div className="animate-pulse space-y-4">
+          <div className="h-64 bg-gray-100 w-full mb-4"></div>
+          <div className="h-64 bg-gray-100 w-full"></div>
+        </div>
       </div>
     );
   }
 
   if (outfits.length === 0) {
     return (
-      <div className="empty-state">
-        <div className="empty-state__icon">💾</div>
-        <h2 className="empty-state__title">No Saved Outfits</h2>
-        <p className="empty-state__text">
-          When you get outfit suggestions from AI, save your favorites here for quick access!
+      <div className="px-6 py-12 flex flex-col items-center justify-center text-center h-full">
+        <iconify-icon icon="lucide:bookmark" class="text-4xl text-[#C5A059] mb-4 opacity-50"></iconify-icon>
+        <h2 className="text-xl font-bold editorial-font mb-2">No Saved Outfits</h2>
+        <p className="text-gray-500 text-sm mb-8">
+          When you compose a look with AURA, save your favorites here.
         </p>
       </div>
     );
   }
 
   return (
-    <div>
-      <h1 className="page-title">Saved Outfits</h1>
-      <p className="page-subtitle">{outfits.length} saved combination{outfits.length !== 1 ? 's' : ''}</p>
+    <div className="pb-32">
+      {/* Page Title & Tabs */}
+      <div className="px-6 pt-8 pb-4">
+        <h1 className="text-4xl font-black tracking-tight mb-6 editorial-font">Saved <span className="italic">Outfits</span></h1>
+        
+        <div className="flex gap-8 border-b border-gray-100">
+          <button className="pb-3 border-b-2 border-[#C5A059] text-xs uppercase tracking-widest font-bold text-[#1A1A1A]">Gallery</button>
+        </div>
+      </div>
 
-      {outfits.map((outfit) => (
-        <OutfitCard
-          key={outfit.id}
-          outfit={outfit}
-          onDelete={() => handleDelete(outfit.id)}
-        />
-      ))}
+      <div className="px-6 space-y-10 pt-4">
+        {outfits.map((outfit) => (
+          <OutfitCard
+            key={outfit.id}
+            outfit={outfit}
+            onDelete={() => handleDelete(outfit.id)}
+          />
+        ))}
+      </div>
     </div>
   );
 }

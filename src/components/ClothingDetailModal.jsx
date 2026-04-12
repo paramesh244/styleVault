@@ -1,4 +1,3 @@
-import { IoClose, IoTrashOutline, IoCreateOutline } from 'react-icons/io5';
 import { deleteClothing } from '../db';
 import { useState } from 'react';
 
@@ -18,158 +17,107 @@ export default function ClothingDetailModal({ clothing, onClose, onDelete, showT
   }
 
   return (
-    <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal-content">
-        <div className="modal-handle" />
-        <div className="modal-header">
-          <h2 className="modal-title">{clothing.name || 'Clothing Item'}</h2>
-          <button className="icon-btn" onClick={onClose}>
-            <IoClose />
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] flex items-end justify-center p-0 transition-opacity">
+      <div className="w-full max-w-md bg-white h-[90dvh] rounded-t-3xl overflow-hidden flex flex-col relative animate-[slideUp_300ms_ease-out]">
+        
+        {/* Header Action */}
+        <div className="absolute top-4 right-4 z-10">
+          <button onClick={onClose} className="w-10 h-10 bg-black/20 backdrop-blur text-white flex items-center justify-center rounded-full hover:bg-black/40">
+            <iconify-icon icon="lucide:x" class="text-xl"></iconify-icon>
           </button>
         </div>
 
-        {/* Image */}
-        {clothing.imageDataUrl && (
-          <div style={{ borderRadius: 'var(--radius-lg)', overflow: 'hidden', marginBottom: 16 }}>
-            <img
-              src={clothing.imageDataUrl}
-              alt={clothing.name}
-              style={{ width: '100%', maxHeight: '40vh', objectFit: 'cover' }}
-            />
-          </div>
-        )}
-
-        {/* Details Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
-          <DetailItem label="Type" value={clothing.type} />
-          <DetailItem label="Sub-type" value={clothing.subType} />
-          <DetailItem label="Pattern" value={clothing.pattern} />
-          <DetailItem label="Material" value={clothing.material} />
-          <DetailItem label="Formality" value={clothing.formality} />
-          <DetailItem label="Fit" value={clothing.fit} />
-        </div>
-
-        {/* Colors */}
-        {clothing.colors && clothing.colors.length > 0 && (
-          <div style={{ marginBottom: 16 }}>
-            <div className="input-label">Colors</div>
-            <div className="chip-group">
-              {clothing.colors.map((color, i) => (
-                <span key={i} className="chip chip--sm">{color}</span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Seasons */}
-        {clothing.seasons && clothing.seasons.length > 0 && (
-          <div style={{ marginBottom: 16 }}>
-            <div className="input-label">Seasons</div>
-            <div className="chip-group">
-              {clothing.seasons.map((s, i) => (
-                <span key={i} className="chip chip--sm chip--active">
-                  {s === 'spring' ? '🌸' : s === 'summer' ? '☀️' : s === 'fall' ? '🍂' : '❄️'} {s}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Occasions */}
-        {clothing.occasions && clothing.occasions.length > 0 && (
-          <div style={{ marginBottom: 16 }}>
-            <div className="input-label">Occasions</div>
-            <div className="chip-group">
-              {clothing.occasions.map((o, i) => (
-                <span key={i} className="chip chip--sm">{o}</span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* AI Description */}
-        {clothing.description && (
-          <div style={{ marginBottom: 16 }}>
-            <div className="input-label">AI Description</div>
-            <div style={{
-              padding: 12,
-              background: 'var(--bg-glass)',
-              borderRadius: 'var(--radius-md)',
-              fontSize: '0.85rem',
-              color: 'var(--text-secondary)',
-              lineHeight: 1.6,
-            }}>
-              {clothing.description}
-            </div>
-          </div>
-        )}
-
-        {/* AI Insights */}
-        {(clothing.versatility > 0 || (clothing.pairsWith && clothing.pairsWith.length > 0) || clothing.careInstructions) && (
-          <div style={{
-            marginBottom: 20,
-            padding: '10px 14px',
-            background: 'rgba(168, 85, 247, 0.06)',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid rgba(168, 85, 247, 0.1)',
-            fontSize: '0.85rem',
-            color: 'var(--text-secondary)',
-            lineHeight: 1.6,
-          }}>
-            <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>✨ AI Insights</div>
-            {clothing.versatility > 0 && (
-              <div style={{ marginBottom: 4 }}>
-                <strong>Versatility:</strong> {clothing.versatility}/10 — {clothing.versatility >= 7 ? 'A wardrobe workhorse!' : clothing.versatility >= 4 ? 'Good for several looks' : 'Statement piece'}
-              </div>
+        <div className="flex-1 overflow-y-auto w-full no-scrollbar">
+          
+          {/* Hero Image */}
+          <div className="w-full aspect-[3/4] bg-gray-100 relative">
+            {clothing.imageDataUrl ? (
+              <img src={clothing.imageDataUrl} alt={clothing.name} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-6xl">👗</div>
             )}
-            {clothing.pairsWith && clothing.pairsWith.length > 0 && (
-              <div style={{ marginBottom: 4 }}>
-                <strong>Pairs well with:</strong> {clothing.pairsWith.join(', ')}
-              </div>
-            )}
-            {clothing.careInstructions && (
+            <div className="absolute bottom-0 w-full h-32 bg-gradient-to-t from-black/60 to-transparent"></div>
+            <div className="absolute bottom-6 left-6 text-white">
+              <span className="text-[10px] uppercase font-bold tracking-[0.3em] text-[#C5A059] mb-1 block">
+                {clothing.type}
+              </span>
+              <h2 className="text-3xl font-black editorial-font">{clothing.name}</h2>
+            </div>
+          </div>
+
+          {/* Details Content */}
+          <div className="p-6 space-y-8">
+            
+            {/* Intel Core Details */}
+            <div className="grid grid-cols-2 gap-y-6 gap-x-4">
+              <DetailItem label="Fit" value={clothing.fit} />
+              <DetailItem label="Material" value={clothing.material} />
+              <DetailItem label="Colors" value={(clothing.colors || []).join(', ')} />
+              <DetailItem label="Pattern" value={clothing.pattern} />
+            </div>
+
+            <div className="h-[1px] bg-gray-100 w-full"></div>
+
+            {/* AI Insights Segment */}
+            {clothing.description && (
               <div>
-                <strong>Care:</strong> {clothing.careInstructions}
+                <h3 className="text-xs uppercase font-bold tracking-widest text-[#1A1A1A] mb-3">AURA Editorial Note</h3>
+                <p className="text-sm text-gray-500 italic leading-relaxed">
+                  "{clothing.description}"
+                </p>
               </div>
             )}
-          </div>
-        )}
 
-        <div className="divider" />
+            {clothing.versatility > 0 && (
+              <div className="p-5 border border-[#C5A059]/30 bg-gray-50">
+                 <h3 className="text-xs font-bold uppercase tracking-widest text-[#C5A059] mb-4 flex items-center gap-2">
+                   <iconify-icon icon="lucide:sparkles"></iconify-icon>
+                   Styling Intel
+                 </h3>
+                 <p className="text-sm border-b border-gray-200 pb-2 mb-2">
+                    <span className="font-bold text-gray-900 mr-2">Versatility:</span>
+                    {clothing.versatility}/10
+                 </p>
+                 {clothing.pairsWith && clothing.pairsWith.length > 0 && (
+                   <p className="text-sm border-b border-gray-200 pb-2 mb-2">
+                      <span className="font-bold text-gray-900 mr-2">Pairs with:</span>
+                      {clothing.pairsWith.join(', ')}
+                   </p>
+                 )}
+                 {clothing.careInstructions && (
+                   <p className="text-sm">
+                      <span className="font-bold text-gray-900 mr-2">Care:</span>
+                      {clothing.careInstructions}
+                   </p>
+                 )}
+              </div>
+            )}
 
-        {/* Actions */}
-        {!showDeleteConfirm ? (
-          <button
-            className="btn btn--ghost btn--full"
-            onClick={() => setShowDeleteConfirm(true)}
-            style={{ color: 'var(--error)' }}
-          >
-            <IoTrashOutline /> Delete from Wardrobe
-          </button>
-        ) : (
-          <div style={{ textAlign: 'center' }}>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: 12 }}>
-              Delete "{clothing.name}"? This cannot be undone.
-            </p>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                className="btn btn--secondary"
-                style={{ flex: 1 }}
-                onClick={() => setShowDeleteConfirm(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="btn"
-                style={{ flex: 1, background: 'var(--error)', color: 'white' }}
-                onClick={handleDelete}
-                disabled={deleting}
-              >
-                {deleting ? 'Deleting...' : 'Delete'}
-              </button>
+            {/* Danger Zone */}
+            <div className="pt-8 mb-8 pb-12">
+              {!showDeleteConfirm ? (
+                <button 
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="w-full py-4 text-xs font-bold uppercase tracking-widest text-red-500 flex items-center justify-center gap-2"
+                >
+                  <iconify-icon icon="lucide:trash-2"></iconify-icon>
+                  Remove from Vault
+                </button>
+              ) : (
+                <div className="p-4 bg-red-50 border border-red-100">
+                  <p className="text-sm text-red-600 font-bold mb-4 text-center">Delete this piece forever?</p>
+                  <div className="flex gap-2">
+                    <button className="flex-1 py-3 bg-white border border-gray-200 text-xs font-bold uppercase tracking-widest" onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
+                    <button className="flex-1 py-3 bg-red-600 text-white text-xs font-bold uppercase tracking-widest" onClick={handleDelete} disabled={deleting}>
+                      {deleting ? '...' : 'Delete'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
+
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
@@ -178,17 +126,9 @@ export default function ClothingDetailModal({ clothing, onClose, onDelete, showT
 function DetailItem({ label, value }) {
   if (!value) return null;
   return (
-    <div style={{
-      padding: 10,
-      background: 'var(--bg-glass)',
-      borderRadius: 'var(--radius-sm)',
-    }}>
-      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 2 }}>
-        {label}
-      </div>
-      <div style={{ fontSize: '0.85rem', fontWeight: 500 }}>
-        {value.charAt(0).toUpperCase() + value.slice(1)}
-      </div>
+    <div>
+      <div className="text-[10px] font-bold text-gray-400 tracking-widest uppercase mb-1">{label}</div>
+      <div className="text-sm font-semibold text-[#1A1A1A] capitalize">{value}</div>
     </div>
   );
 }

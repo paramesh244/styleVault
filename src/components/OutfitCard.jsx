@@ -1,160 +1,69 @@
-import { IoBookmarkOutline } from 'react-icons/io5';
-
 export default function OutfitCard({ outfit, onSave, onDelete }) {
+  const mainImage = outfit.items && outfit.items.length > 0 
+    ? (outfit.items[0].imageDataUrl || outfit.items[0].thumbnailDataUrl)
+    : 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=600&auto=format&fit=crop'; // fallback
+    
   return (
-    <div className="outfit-card">
-      <div className="outfit-card__header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
-          <div className="outfit-card__name">{outfit.name}</div>
-          {outfit.confidence > 0 && (
-            <div style={{
-              padding: '2px 8px',
-              borderRadius: 'var(--radius-full, 100px)',
-              background: outfit.confidence >= 8
-                ? 'rgba(52, 211, 153, 0.15)'
-                : outfit.confidence >= 5
-                  ? 'rgba(251, 191, 36, 0.15)'
-                  : 'rgba(239, 68, 68, 0.15)',
-              color: outfit.confidence >= 8
-                ? 'var(--success, #34d399)'
-                : outfit.confidence >= 5
-                  ? '#fbbf24'
-                  : 'var(--error, #ef4444)',
-              fontSize: '0.7rem',
-              fontWeight: 700,
-              flexShrink: 0,
-            }}>
-              {outfit.confidence}/10
-            </div>
+    <div className="block group mb-8">
+      <div className="relative aspect-[3/4] overflow-hidden bg-gray-50 mb-4 border border-gray-100">
+        {mainImage ? (
+          <img 
+            src={mainImage} 
+            alt="Outfit Hero" 
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-4xl">👗</div>
+        )}
+        
+        <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-3 py-1.5 flex items-center gap-2 border border-[#C5A059]/10">
+          <iconify-icon icon="lucide:sparkles" class="text-xs text-[#C5A059]"></iconify-icon>
+          <span className="text-[9px] uppercase font-bold tracking-widest text-[#1A1A1A]">AI Pick</span>
+        </div>
+        
+
+        
+        {onDelete && (
+           <button 
+             onClick={(e) => { e.preventDefault(); onDelete(); }}
+             className="absolute bottom-4 right-4 w-10 h-10 bg-white/95 backdrop-blur-md flex items-center justify-center text-gray-400 hover:text-red-500 border border-gray-100 transition-colors"
+           >
+             <iconify-icon icon="lucide:trash-2" class="text-lg"></iconify-icon>
+           </button>
+        )}
+      </div>
+      
+      <div className="space-y-3">
+        <div className="flex justify-between items-start">
+          <h3 className="text-lg font-bold editorial-font text-[#1A1A1A]">{outfit.name || 'Curated Look'}</h3>
+          <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">
+            {outfit.confidence ? `${outfit.confidence}/10 Match` : 'Style Edit'}
+          </span>
+        </div>
+        
+        <div className="bg-gray-50 p-4 border-l-2 border-[#C5A059]">
+          <p className="text-xs text-gray-600 italic mb-3 leading-relaxed font-medium">
+            "{outfit.reasoning || outfit.styleNotes || 'A carefully composed look for your occasion.'}"
+          </p>
+          
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            {outfit.items && outfit.items.map((item, i) => (
+               <span key={i} className="text-[8px] uppercase tracking-widest font-bold px-2 py-1 bg-white border border-gray-200 text-gray-500">
+                 {item.type || item.name}
+               </span>
+            ))}
+          </div>
+          
+          {onSave && (
+            <button 
+              onClick={(e) => { e.preventDefault(); onSave(); }}
+              className="w-full h-12 mt-4 bg-white border border-[#C5A059]/30 text-[#C5A059] flex items-center justify-center gap-2 font-bold tracking-[0.2em] text-[10px] uppercase transition-all active:bg-[#F8F4EA]"
+            >
+              <iconify-icon icon="lucide:bookmark" class="text-sm"></iconify-icon>
+              Save Outfit
+            </button>
           )}
         </div>
-        {outfit.styleNotes && (
-          <div className="outfit-card__badge">💡 Tip</div>
-        )}
-      </div>
-
-      {/* Item Thumbnails */}
-      <div className="outfit-card__items">
-        {(outfit.items || []).map((item, i) => (
-          <div key={i} style={{ textAlign: 'center', flexShrink: 0 }}>
-            {item.thumbnailDataUrl || item.imageDataUrl ? (
-              <img
-                src={item.thumbnailDataUrl || item.imageDataUrl}
-                alt={item.name}
-                className="outfit-card__item-thumb"
-              />
-            ) : (
-              <div
-                className="outfit-card__item-thumb"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: 'var(--bg-tertiary)',
-                  fontSize: '1.5rem',
-                }}
-              >
-                👕
-              </div>
-            )}
-            <div style={{
-              fontSize: '0.65rem',
-              color: 'var(--text-muted)',
-              marginTop: 4,
-              maxWidth: 80,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}>
-              {item.name}
-            </div>
-          </div>
-        ))}
-        {(outfit.items || []).length === 0 && (
-          <div style={{
-            padding: '20px',
-            color: 'var(--text-muted)',
-            fontSize: '0.8rem',
-            fontStyle: 'italic',
-          }}>
-            Items not found in wardrobe (may have been deleted)
-          </div>
-        )}
-      </div>
-
-      {/* Reasoning */}
-      {outfit.reasoning && (
-        <div className="outfit-card__reasoning">
-          <div className="outfit-card__reasoning-label">✨ Why this works</div>
-          {outfit.reasoning}
-        </div>
-      )}
-
-      {/* Color Story */}
-      {outfit.colorStory && (
-        <div style={{
-          marginTop: 8,
-          padding: '8px 12px',
-          background: 'rgba(99, 102, 241, 0.06)',
-          borderRadius: 'var(--radius-sm)',
-          fontSize: '0.8rem',
-          color: 'var(--text-secondary)',
-          lineHeight: 1.5,
-        }}>
-          🎨 <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Color Story:</span> {outfit.colorStory}
-        </div>
-      )}
-
-      {/* Style Notes */}
-      {outfit.styleNotes && (
-        <div style={{
-          marginTop: 8,
-          padding: '8px 12px',
-          background: 'rgba(168, 85, 247, 0.06)',
-          borderRadius: 'var(--radius-sm)',
-          fontSize: '0.8rem',
-          color: 'var(--text-accent)',
-        }}>
-          💡 {outfit.styleNotes}
-        </div>
-      )}
-
-      {/* Missing Pieces / Shopping Suggestions */}
-      {outfit.missingPieces && outfit.missingPieces.length > 0 && (
-        <div style={{
-          marginTop: 8,
-          padding: '8px 12px',
-          background: 'rgba(251, 191, 36, 0.06)',
-          borderRadius: 'var(--radius-sm)',
-          fontSize: '0.8rem',
-          color: 'var(--text-secondary)',
-          lineHeight: 1.6,
-        }}>
-          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>🛍️ Would elevate this look:</span>
-          <ul style={{ margin: '4px 0 0 0', paddingLeft: 18 }}>
-            {outfit.missingPieces.map((piece, i) => (
-              <li key={i} style={{ marginBottom: 2 }}>{piece}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Actions */}
-      <div className="outfit-card__actions">
-        {onSave && (
-          <button className="btn btn--secondary" onClick={onSave} style={{ flex: 1 }}>
-            <IoBookmarkOutline /> Save Outfit
-          </button>
-        )}
-        {onDelete && (
-          <button
-            className="btn btn--ghost"
-            onClick={onDelete}
-            style={{ color: 'var(--error)' }}
-          >
-            Remove
-          </button>
-        )}
       </div>
     </div>
   );

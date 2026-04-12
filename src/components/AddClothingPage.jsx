@@ -1,12 +1,8 @@
 import { useState, useRef } from 'react';
-import { IoCameraOutline, IoImageOutline, IoSparkles, IoCheckmarkCircle } from 'react-icons/io5';
 import { addClothing, blobToDataURL, createThumbnail } from '../db';
 import { analyzeClothing } from '../services/geminiService';
 
 const CLOTHING_TYPES = ['tops', 'bottoms', 'dresses', 'outerwear', 'shoes', 'accessories'];
-const OCCASIONS = ['everyday', 'work', 'date night', 'party', 'wedding', 'workout', 'outdoor adventure', 'travel', 'beach', 'brunch', 'job interview', 'concert'];
-const SEASONS = ['spring', 'summer', 'fall', 'winter'];
-const FORMALITY_LEVELS = ['very casual', 'casual', 'smart casual', 'business casual', 'business', 'formal', 'black tie'];
 const FIT_OPTIONS = ['slim', 'regular', 'relaxed', 'oversized', 'tailored', 'cropped', 'flared', 'skinny', 'straight', 'a-line'];
 
 export default function AddClothingPage({ onClothingAdded, hasApiKey, onOpenSettings, showToast }) {
@@ -23,7 +19,6 @@ export default function AddClothingPage({ onClothingAdded, hasApiKey, onOpenSett
     colors: [],
     pattern: '',
     material: '',
-    formality: 'casual',
     fit: 'regular',
     seasons: [],
     occasions: [],
@@ -40,23 +35,12 @@ export default function AddClothingPage({ onClothingAdded, hasApiKey, onOpenSett
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  function toggleArrayField(field, value) {
-    setForm((prev) => {
-      const arr = prev[field] || [];
-      return {
-        ...prev,
-        [field]: arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value],
-      };
-    });
-  }
-
   async function handleImageSelect(file) {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
       showToast('Please select an image file', 'error');
       return;
     }
-    // Limit to 10MB
     if (file.size > 10 * 1024 * 1024) {
       showToast('Image must be under 10MB', 'error');
       return;
@@ -86,7 +70,6 @@ export default function AddClothingPage({ onClothingAdded, hasApiKey, onOpenSett
         colors: analysis.colors || [],
         pattern: analysis.pattern || '',
         material: analysis.material || '',
-        formality: analysis.formality || 'casual',
         fit: analysis.fit || 'regular',
         seasons: analysis.seasons || [],
         occasions: analysis.occasions || [],
@@ -98,7 +81,6 @@ export default function AddClothingPage({ onClothingAdded, hasApiKey, onOpenSett
       setAnalyzed(true);
       showToast('AI analysis complete! ✨');
     } catch (err) {
-      console.error('Analysis failed:', err);
       showToast(err.message || 'Analysis failed. Try again.', 'error');
     } finally {
       setAnalyzing(false);
@@ -118,14 +100,9 @@ export default function AddClothingPage({ onClothingAdded, hasApiKey, onOpenSett
     setSaving(true);
     try {
       const thumbnailDataUrl = await createThumbnail(imageDataUrl);
-      await addClothing({
-        ...form,
-        imageDataUrl,
-        thumbnailDataUrl,
-      });
+      await addClothing({ ...form, imageDataUrl, thumbnailDataUrl });
       onClothingAdded();
     } catch (err) {
-      console.error('Save failed:', err);
       showToast('Failed to save. Please try again.', 'error');
     } finally {
       setSaving(false);
@@ -140,47 +117,44 @@ export default function AddClothingPage({ onClothingAdded, hasApiKey, onOpenSett
   }
 
   return (
-    <div>
-      <h1 className="page-title">Add Clothing</h1>
-      <p className="page-subtitle">Upload a photo and let AI analyze it</p>
+    <div className="px-6 pt-6 pb-32">
+      <header className="mb-10">
+        <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A059] font-bold mb-3 block">Digital Vault</span>
+        <h1 className="text-4xl leading-tight font-black tracking-tight mb-2 editorial-font">
+          Capture <span className="italic">Piece</span>
+        </h1>
+        <p className="text-gray-500 text-sm leading-relaxed">
+          Upload a photo to automatically extract color, fabric, and cut using AURA vision.
+        </p>
+      </header>
 
-      {/* Image Upload */}
       {!imageDataUrl ? (
         <>
-          <div
-            className={`upload-area ${dragover ? 'upload-area--dragover' : ''}`}
+          <button
             onClick={() => fileInputRef.current?.click()}
             onDragOver={(e) => { e.preventDefault(); setDragover(true); }}
             onDragLeave={() => setDragover(false)}
             onDrop={handleDrop}
-            id="upload-area"
+            className={`w-full aspect-[4/5] flex flex-col items-center justify-center gap-4 transition-all duration-300 ${
+              dragover ? 'bg-[#F8F4EA] border-[#C5A059]' : 'bg-gray-50 border-gray-200'
+            } border-2 border-dashed`}
           >
-            <div className="upload-area__icon">📸</div>
-            <div className="upload-area__text">Tap to upload or take a photo</div>
-            <div className="upload-area__hint">JPG, PNG, WEBP • Max 10MB</div>
-          </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-            <button
-              className="btn btn--secondary"
-              onClick={() => fileInputRef.current?.click()}
-              style={{ flex: 1 }}
-            >
-              <IoImageOutline /> Gallery
-            </button>
-            <button
-              className="btn btn--secondary"
-              onClick={() => cameraInputRef.current?.click()}
-              style={{ flex: 1 }}
-            >
-              <IoCameraOutline /> Camera
-            </button>
-          </div>
+            <div className="w-16 h-16 rounded-full bg-[#C5A059]/10 flex items-center justify-center text-[#C5A059]">
+              <iconify-icon icon="lucide:camera" class="text-3xl"></iconify-icon>
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-bold uppercase tracking-widest text-[#1A1A1A]">Tap to Scan</p>
+              <p className="text-xs text-gray-400 mt-1">Camera or Gallery</p>
+            </div>
+          </button>
+          
           <input
             ref={fileInputRef}
             type="file"
             accept="image/*"
+            capture="environment"
             onChange={(e) => handleImageSelect(e.target.files?.[0])}
-            style={{ display: 'none' }}
+            className="hidden"
           />
           <input
             ref={cameraInputRef}
@@ -188,249 +162,125 @@ export default function AddClothingPage({ onClothingAdded, hasApiKey, onOpenSett
             accept="image/*"
             capture="environment"
             onChange={(e) => handleImageSelect(e.target.files?.[0])}
-            style={{ display: 'none' }}
+            className="hidden"
           />
         </>
       ) : (
         <>
-          {/* Image Preview */}
-          <div className="image-preview">
-            <img src={imageDataUrl} alt="Clothing preview" />
+          <div className="relative w-full aspect-[4/5] bg-gray-50 overflow-hidden mb-6 group">
+            <img src={imageDataUrl} alt="Preview" className="w-full h-full object-cover" />
             <button
-              className="image-preview__remove"
               onClick={() => {
                 setImageDataUrl(null);
                 setAnalyzed(false);
-                setForm({
-                  name: '', type: 'tops', subType: '', colors: [], pattern: '',
-                  material: '', formality: 'casual', fit: 'regular', seasons: [], occasions: [],
-                  versatility: 0, pairsWith: [], careInstructions: '', description: '',
-                });
               }}
+              className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-md flex items-center justify-center text-[#1A1A1A]"
             >
-              ✕
+              <iconify-icon icon="lucide:x" class="text-lg"></iconify-icon>
             </button>
           </div>
 
-          {/* AI Analyze Button */}
           {!analyzed && !analyzing && (
             <button
-              className="btn btn--primary btn--full btn--lg"
               onClick={handleAnalyze}
-              style={{ marginBottom: 20 }}
-              id="analyze-btn"
+              className="w-full h-14 bg-[#1A1A1A] text-white flex items-center justify-center gap-3 font-bold tracking-[0.2em] text-[10px] uppercase mb-8"
             >
-              <IoSparkles /> Analyze with AI ✨
+              Analyze with AURA
+              <iconify-icon icon="lucide:sparkles" class="text-sm text-[#C5A059]"></iconify-icon>
             </button>
           )}
 
           {analyzing && (
-            <div className="ai-loading" style={{ marginBottom: 20 }}>
-              <div className="ai-loading__sparkle">✨</div>
-              <div className="spinner spinner--lg" />
-              <div className="ai-loading__text">
-                AI is analyzing your clothing...
-              </div>
+            <div className="w-full h-14 bg-gray-50 text-gray-500 flex items-center justify-center gap-3 font-bold tracking-[0.2em] text-[10px] uppercase mb-8 animate-pulse border border-gray-100">
+               <iconify-icon icon="lucide:loader" class="text-sm animate-spin text-[#C5A059]"></iconify-icon>
+               Extracting details...
             </div>
           )}
 
           {analyzed && (
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16,
-              padding: '10px 14px', background: 'rgba(52, 211, 153, 0.1)',
-              borderRadius: 'var(--radius-md)', border: '1px solid rgba(52, 211, 153, 0.2)',
-              fontSize: '0.85rem', color: 'var(--success)',
-            }}>
-              <IoCheckmarkCircle /> AI analysis complete — review & edit below
-            </div>
-          )}
-
-          {/* Form Fields */}
-          <div className="input-group">
-            <label className="input-label">Name</label>
-            <input
-              className="input-field"
-              value={form.name}
-              onChange={(e) => updateForm('name', e.target.value)}
-              placeholder="e.g., Navy Striped Shirt"
-              id="clothing-name-input"
-            />
-          </div>
-
-          <div style={{ display: 'flex', gap: 10 }}>
-            <div className="input-group" style={{ flex: 1 }}>
-              <label className="input-label">Type</label>
-              <select
-                className="input-field"
-                value={form.type}
-                onChange={(e) => updateForm('type', e.target.value)}
-              >
-                {CLOTHING_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {t.charAt(0).toUpperCase() + t.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="input-group" style={{ flex: 1 }}>
-              <label className="input-label">Sub-type</label>
-              <input
-                className="input-field"
-                value={form.subType}
-                onChange={(e) => updateForm('subType', e.target.value)}
-                placeholder="e.g., Oxford shirt"
-              />
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: 10 }}>
-            <div className="input-group" style={{ flex: 1 }}>
-              <label className="input-label">Pattern</label>
-              <input
-                className="input-field"
-                value={form.pattern}
-                onChange={(e) => updateForm('pattern', e.target.value)}
-                placeholder="e.g., striped"
-              />
-            </div>
-            <div className="input-group" style={{ flex: 1 }}>
-              <label className="input-label">Material</label>
-              <input
-                className="input-field"
-                value={form.material}
-                onChange={(e) => updateForm('material', e.target.value)}
-                placeholder="e.g., cotton"
-              />
-            </div>
-          </div>
-
-          <div className="input-group">
-            <label className="input-label">Colors</label>
-            <input
-              className="input-field"
-              value={(form.colors || []).join(', ')}
-              onChange={(e) => updateForm('colors', e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
-              placeholder="e.g., navy blue, white"
-            />
-          </div>
-
-          <div className="input-group">
-            <label className="input-label">Formality</label>
-            <select
-              className="input-field"
-              value={form.formality}
-              onChange={(e) => updateForm('formality', e.target.value)}
-            >
-              {FORMALITY_LEVELS.map((f) => (
-                <option key={f} value={f}>
-                  {f.charAt(0).toUpperCase() + f.slice(1)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="input-group">
-            <label className="input-label">Fit</label>
-            <select
-              className="input-field"
-              value={form.fit}
-              onChange={(e) => updateForm('fit', e.target.value)}
-            >
-              {FIT_OPTIONS.map((f) => (
-                <option key={f} value={f}>
-                  {f.charAt(0).toUpperCase() + f.slice(1)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="input-group">
-            <label className="input-label">Seasons</label>
-            <div className="chip-group">
-              {SEASONS.map((s) => (
-                <button
-                  key={s}
-                  className={`chip ${(form.seasons || []).includes(s) ? 'chip--active' : ''}`}
-                  onClick={() => toggleArrayField('seasons', s)}
-                >
-                  {s === 'spring' ? '🌸' : s === 'summer' ? '☀️' : s === 'fall' ? '🍂' : '❄️'} {s}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="input-group">
-            <label className="input-label">Occasions</label>
-            <div className="chip-group">
-              {OCCASIONS.map((o) => (
-                <button
-                  key={o}
-                  className={`chip ${(form.occasions || []).includes(o) ? 'chip--active' : ''}`}
-                  onClick={() => toggleArrayField('occasions', o)}
-                >
-                  {o.charAt(0).toUpperCase() + o.slice(1)}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="input-group">
-            <label className="input-label">AI Description</label>
-            <textarea
-              className="input-field"
-              value={form.description}
-              onChange={(e) => updateForm('description', e.target.value)}
-              placeholder="A detailed description of this item..."
-              rows={3}
-            />
-          </div>
-
-          {/* AI-generated extra fields (read-only display) */}
-          {analyzed && form.versatility > 0 && (
-            <div style={{
-              padding: '10px 14px',
-              background: 'rgba(168, 85, 247, 0.06)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid rgba(168, 85, 247, 0.1)',
-              marginBottom: 12,
-              fontSize: '0.85rem',
-              color: 'var(--text-secondary)',
-              lineHeight: 1.6,
-            }}>
-              <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>✨ AI Insights</div>
-              <div style={{ marginBottom: 4 }}>
-                <strong>Versatility:</strong> {form.versatility}/10 — {form.versatility >= 7 ? 'A wardrobe workhorse!' : form.versatility >= 4 ? 'Good for several looks' : 'Statement piece'}
+            <div className="space-y-6">
+              <div className="flex items-start gap-4 p-4 border border-[#C5A059]/10 bg-[#C5A059]/5 mb-6">
+                <iconify-icon icon="lucide:check-circle" class="text-[#C5A059] mt-1"></iconify-icon>
+                <p className="text-[11px] text-[#1A1A1A] font-medium leading-tight">
+                  AURA analysis complete. You can refine the extracted details below before adding to your vault.
+                </p>
               </div>
-              {form.pairsWith && form.pairsWith.length > 0 && (
-                <div style={{ marginBottom: 4 }}>
-                  <strong>Pairs well with:</strong> {form.pairsWith.join(', ')}
-                </div>
-              )}
-              {form.careInstructions && (
+
+              <div className="space-y-4">
                 <div>
-                  <strong>Care:</strong> {form.careInstructions}
+                  <label className="text-[10px] uppercase tracking-widest font-bold text-gray-400 block mb-2">Item Name</label>
+                  <input
+                    className="w-full p-4 bg-gray-50 border border-gray-100 focus:border-[#C5A059] outline-none text-sm font-bold editorial-font italic transition-colors"
+                    value={form.name}
+                    onChange={(e) => updateForm('name', e.target.value)}
+                  />
                 </div>
-              )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest font-bold text-gray-400 block mb-2">Category</label>
+                    <select
+                      className="w-full p-4 bg-gray-50 border border-gray-100 focus:border-[#C5A059] outline-none text-xs uppercase tracking-widest font-bold transition-colors appearance-none"
+                      value={form.type}
+                      onChange={(e) => updateForm('type', e.target.value)}
+                    >
+                      {CLOTHING_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest font-bold text-gray-400 block mb-2">Fit</label>
+                    <select
+                      className="w-full p-4 bg-gray-50 border border-gray-100 focus:border-[#C5A059] outline-none text-xs uppercase tracking-widest font-bold transition-colors appearance-none"
+                      value={form.fit}
+                      onChange={(e) => updateForm('fit', e.target.value)}
+                    >
+                      {FIT_OPTIONS.map(f => <option key={f} value={f}>{f}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest font-bold text-gray-400 block mb-2">Colors</label>
+                    <input
+                      className="w-full p-4 bg-gray-50 border border-gray-100 focus:border-[#C5A059] outline-none text-sm transition-colors"
+                      value={(form.colors || []).join(', ')}
+                      onChange={(e) => updateForm('colors', e.target.value.split(',').map(s => s.trim()))}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest font-bold text-gray-400 block mb-2">Material</label>
+                    <input
+                      className="w-full p-4 bg-gray-50 border border-gray-100 focus:border-[#C5A059] outline-none text-sm transition-colors"
+                      value={form.material}
+                      onChange={(e) => updateForm('material', e.target.value)}
+                    />
+                  </div>
+                </div>
+                
+                {form.versatility > 0 && (
+                  <div className="p-4 border-l-2 border-[#C5A059] bg-gray-50">
+                    <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#C5A059] mb-1">AURA Intelligence</p>
+                    <p className="text-xs text-gray-600 mb-2">Versatility Score: <span className="font-bold">{form.versatility}/10</span></p>
+                    {form.pairsWith && form.pairsWith.length > 0 && (
+                      <p className="text-xs text-gray-600 mb-2">Pairs perfectly with: <span className="font-medium italic">{form.pairsWith.join(', ')}</span></p>
+                    )}
+                    {form.description && (
+                      <p className="text-xs text-gray-500 italic mt-2">"{form.description}"</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <button
+                className="w-full h-14 bg-[#1A1A1A] text-white flex items-center justify-center gap-3 font-bold tracking-[0.2em] text-[10px] uppercase mt-4 disabled:opacity-50"
+                onClick={handleSave}
+                disabled={saving || !form.name}
+              >
+                {saving ? 'Adding to Vault...' : 'Add to Vault'}
+              </button>
             </div>
           )}
-
-          {/* Save Button */}
-          <button
-            className="btn btn--primary btn--full btn--lg"
-            onClick={handleSave}
-            disabled={saving || !form.name.trim()}
-            id="save-clothing-btn"
-            style={{ marginTop: 8, marginBottom: 20 }}
-          >
-            {saving ? (
-              <>
-                <span className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} />
-                Saving...
-              </>
-            ) : (
-              '✓ Save to Wardrobe'
-            )}
-          </button>
         </>
       )}
     </div>

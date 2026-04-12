@@ -1,82 +1,47 @@
-const COLOR_MAP = {
-  black: '#1a1a1a',
-  white: '#f5f5f5',
-  gray: '#888',
-  grey: '#888',
-  navy: '#1e3a5f',
-  blue: '#3b82f6',
-  'light blue': '#7dd3fc',
-  'dark blue': '#1e40af',
-  red: '#ef4444',
-  'dark red': '#991b1b',
-  maroon: '#7f1d1d',
-  burgundy: '#6b1d3a',
-  pink: '#ec4899',
-  'hot pink': '#db2777',
-  green: '#22c55e',
-  'dark green': '#166534',
-  olive: '#6b7c3e',
-  yellow: '#eab308',
-  orange: '#f97316',
-  purple: '#a855f7',
-  violet: '#8b5cf6',
-  brown: '#92400e',
-  tan: '#d2b48c',
-  beige: '#f5f0e1',
-  cream: '#fef9ef',
-  khaki: '#c3b091',
-  gold: '#ca8a04',
-  silver: '#94a3b8',
-  coral: '#f87171',
-  teal: '#14b8a6',
-  turquoise: '#06b6d4',
-};
-
-function getColorHex(colorName) {
-  const lower = colorName.toLowerCase().trim();
-  return COLOR_MAP[lower] || '#888';
-}
-
 export default function ClothingCard({ item, onClick }) {
+  // Use subset of colors/materials for tags
+  const tags = [];
+  if (item.colors && item.colors.length > 0) {
+    tags.push(item.colors[0]); // Just take primary color for cleaner UI
+  }
+  if (item.material || item.fabric) {
+    tags.push(item.material || item.fabric);
+  }
+  
+  if (tags.length === 0 && item.subType) {
+    tags.push(item.subType);
+  } else if (tags.length === 0 && item.type) {
+    tags.push(item.type);
+  }
+
   return (
-    <div className="clothing-card" onClick={onClick} id={`clothing-${item.id}`}>
-      {item.imageDataUrl ? (
-        <img
-          src={item.thumbnailDataUrl || item.imageDataUrl}
-          alt={item.name || 'Clothing item'}
-          className="clothing-card__image"
-          loading="lazy"
-        />
-      ) : (
-        <div
-          className="clothing-card__image"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '2rem',
-          }}
-        >
-          👕
-        </div>
-      )}
-      <div className="clothing-card__info">
-        <div className="clothing-card__name">{item.name || 'Unnamed Item'}</div>
-        <div className="clothing-card__type">
-          {item.subType || item.type || 'Clothing'}
-        </div>
-        {item.colors && item.colors.length > 0 && (
-          <div className="clothing-card__colors">
-            {item.colors.slice(0, 4).map((color, i) => (
-              <div
-                key={i}
-                className="color-dot"
-                style={{ backgroundColor: getColorHex(color) }}
-                title={color}
-              />
-            ))}
-          </div>
+    <div className="group cursor-pointer" onClick={onClick} id={`clothing-${item.id}`}>
+      <div className="aspect-[3/4] bg-gray-50 overflow-hidden mb-2 relative">
+        {item.imageDataUrl ? (
+          <img 
+            src={item.thumbnailDataUrl || item.imageDataUrl} 
+            alt={item.name || 'Clothing item'} 
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-3xl">👗</div>
         )}
+        <div className="absolute top-2 right-2">
+          <div className="bg-white/90 backdrop-blur-sm p-1.5 flex items-center justify-center border border-[#C5A059]/20">
+            <iconify-icon icon="lucide:sparkles" class="text-[10px] text-[#C5A059]"></iconify-icon>
+          </div>
+        </div>
+      </div>
+      <h3 className="text-xs font-bold uppercase tracking-tight truncate pr-1">
+        {item.name || 'Unnamed Item'}
+      </h3>
+      <div className="flex flex-wrap gap-1 mt-1.5 h-[18px] overflow-hidden">
+        {tags.slice(0, 2).map((tag, i) => (
+          <span key={i} className="text-[8px] px-1.5 py-0.5 border border-gray-100 text-gray-400 uppercase truncate max-w-[80px]">
+            {tag}
+          </span>
+        ))}
       </div>
     </div>
   );
