@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { IoShirtOutline, IoAddCircle, IoSparkles, IoBookmarkOutline, IoLogOutOutline } from 'react-icons/io5';
+import { IoShirtOutline, IoAddCircle, IoSparkles, IoBookmarkOutline, IoLogOutOutline, IoPersonCircleOutline } from 'react-icons/io5';
 import { useAuth } from './AuthContext';
 import LoginPage from './components/LoginPage';
 import WardrobePage from './components/WardrobePage';
 import AddClothingPage from './components/AddClothingPage';
 import SuggestPage from './components/SuggestPage';
 import SavedOutfitsPage from './components/SavedOutfitsPage';
-import SettingsModal from './components/SettingsModal';
+import ProfileModal from './components/ProfileModal';
 import ClothingDetailModal from './components/ClothingDetailModal';
 import Toast from './components/Toast';
 import { getClothingCount } from './db';
@@ -23,7 +23,7 @@ export default function App() {
   const { user, loading: authLoading, logout } = useAuth();
 
   const [activeTab, setActiveTab] = useState('wardrobe');
-  const [showSettings, setShowSettings] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const [selectedClothing, setSelectedClothing] = useState(null);
   const [toast, setToast] = useState(null);
   const [hasApiKey, setHasApiKey] = useState(false);
@@ -125,7 +125,7 @@ export default function App() {
           <AddClothingPage
             onClothingAdded={handleClothingAdded}
             hasApiKey={hasApiKey}
-            onOpenSettings={() => setShowSettings(true)}
+            onOpenSettings={() => setShowProfile(true)}
             showToast={showToast}
           />
         );
@@ -135,7 +135,7 @@ export default function App() {
             key={refreshKey}
             hasApiKey={hasApiKey}
             clothingCount={clothingCount}
-            onOpenSettings={() => setShowSettings(true)}
+            onOpenSettings={() => setShowProfile(true)}
             onAddClick={() => setActiveTab('add')}
             showToast={showToast}
           />
@@ -166,25 +166,43 @@ export default function App() {
               {clothingCount}
             </span>
           )}
-          {user?.photoURL && (
-            <img
-              src={user.photoURL}
-              alt="Profile"
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                border: '2px solid var(--border-light)',
-                cursor: 'pointer',
-              }}
-              onClick={() => setShowSettings(true)}
-              title={user.displayName || user.email}
-              id="profile-avatar"
-            />
-          )}
+          <div 
+            onClick={() => setShowProfile(true)} 
+            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            id="profile-trigger"
+          >
+            {user?.photoURL ? (
+              <img
+                src={user.photoURL}
+                alt="Profile"
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: '50%',
+                  border: '2px solid var(--border-light)',
+                }}
+                title={user.displayName || user.email}
+              />
+            ) : (
+              <div style={{ 
+                width: 32, 
+                height: 32, 
+                borderRadius: '50%', 
+                background: 'var(--bg-glass)', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                border: '1px solid var(--border-subtle)',
+                color: 'var(--text-secondary)',
+                fontSize: '1.2rem'
+              }}>
+                <IoPersonCircleOutline />
+              </div>
+            )}
+          </div>
           <button
             className="icon-btn"
-            onClick={handleLogout}
+            onClick={() => setShowProfile(true)}
             title="Sign out"
             id="logout-btn"
             style={{ width: 36, height: 36, fontSize: '1.1rem' }}
@@ -193,7 +211,6 @@ export default function App() {
           </button>
         </div>
       </header>
-
       {/* Main Content */}
       <main className="main-content">
         {renderPage()}
@@ -215,11 +232,10 @@ export default function App() {
       </nav>
 
       {/* Modals */}
-      {showSettings && (
-        <SettingsModal
+      {showProfile && (
+        <ProfileModal
           onClose={() => {
-            setShowSettings(false);
-            updateApiKeyStatus();
+            setShowProfile(false);
           }}
           showToast={showToast}
         />
