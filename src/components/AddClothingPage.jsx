@@ -216,6 +216,9 @@ export default function AddClothingPage({ onClothingAdded, hasApiKey, onOpenSett
     }
 
     setAnalyzing(true);
+    // Scroll to top so user can see the analysis progress
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
     try {
       const analysis = await analyzeClothing(imageDataUrl);
       setForm({

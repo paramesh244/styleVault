@@ -54,7 +54,7 @@ export async function analyzeClothing(imageDataUrl) {
   const base64Data = imageDataUrl.split(',')[1];
   const mimeType = imageDataUrl.split(';')[0].split(':')[1];
 
-  const prompt = `You are StyleVault AI — a world-class fashion analyst with deep expertise in textiles, color theory, garment construction, and contemporary style trends across streetwear, haute couture, business fashion, and athleisure.
+  const prompt = `You are Aura AI — a world-class fashion analyst with deep expertise in textiles, color theory, garment construction, and contemporary style trends across streetwear, haute couture, business fashion, and athleisure.
 
 TASK: Analyze the clothing item in this image with expert-level precision. Examine every visible detail — stitching, hardware, labels, fabric texture, drape, and silhouette.
 
@@ -120,7 +120,7 @@ export async function suggestOutfits(allClothing, userRequest) {
     )
     .join('\n');
 
-  const prompt = `You are StyleVault AI — an elite personal stylist with mastery in color theory, silhouette harmony, texture mixing, and trend-forward fashion. You think like a stylist for top-tier fashion magazines.
+  const prompt = `You are Aura AI — an elite personal stylist with mastery in color theory, silhouette harmony, texture mixing, and trend-forward fashion. You think like a stylist for top-tier fashion magazines.
 
 YOUR CLIENT'S FULL WARDROBE:
 ${wardrobeDescription}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getAllClothing } from '../db';
+import { getAllClothingSummary } from '../db';
 import ClothingCard from './ClothingCard';
 
 const FILTER_TYPES = ['all', 'tops', 'bottoms', 'dresses', 'outerwear', 'shoes', 'accessories'];
@@ -15,7 +15,7 @@ export default function WardrobePage({ onSelectClothing, onAddClick, clothingCou
 
   async function loadClothing() {
     setLoading(true);
-    const items = await getAllClothing();
+    const items = await getAllClothingSummary();
     setClothing(items);
     setLoading(false);
   }

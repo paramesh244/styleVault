@@ -58,6 +58,27 @@ export async function getAllClothing() {
   return apiFetch('/clothes');
 }
 
+// Lightweight version — excludes full-resolution images for fast grid loading
+export async function getAllClothingSummary() {
+  return apiFetch('/clothes/summary');
+}
+
+// Batch fetch multiple clothing items by IDs in a single request
+export async function getClothingBatch(ids) {
+  if (!ids || ids.length === 0) return [];
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_BASE}/clothes/batch`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ ids }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || 'Failed to batch fetch clothing');
+  }
+  return res.json();
+}
+
 export async function getClothingById(id) {
   try {
     return await apiFetch(`/clothes/${id}`);
@@ -179,7 +200,7 @@ export function blobToDataURL(blob) {
 }
 
 // Create a thumbnail from an image data URL
-export function createThumbnail(dataUrl, maxSize = 200) {
+export function createThumbnail(dataUrl, maxSize = 480) {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
@@ -189,7 +210,7 @@ export function createThumbnail(dataUrl, maxSize = 200) {
       canvas.height = img.height * ratio;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL('image/jpeg', 0.7));
+      resolve(canvas.toDataURL('image/jpeg', 0.8));
     };
     img.src = dataUrl;
   });

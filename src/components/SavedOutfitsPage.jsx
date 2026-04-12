@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getAllOutfits, deleteOutfit, getClothingById } from '../db';
+import { getAllOutfits, deleteOutfit, getClothingBatch } from '../db';
 import OutfitCard from './OutfitCard';
 
 export default function SavedOutfitsPage({ showToast }) {
@@ -14,29 +14,36 @@ export default function SavedOutfitsPage({ showToast }) {
     setLoading(true);
     const saved = await getAllOutfits();
 
-    const enriched = await Promise.all(
-      saved.map(async (outfit) => {
-        const items = await Promise.all(
-          (outfit.clothingIds || []).map((id) => getClothingById(id))
-        );
-        return {
-          ...outfit,
-          name: outfit.name || 'Saved Outfit',
-          reasoning: outfit.aiReasoning,
-          styleNotes: outfit.styleNotes,
-          items: items.filter(Boolean),
-        };
-      })
-    );
+    // Collect all unique clothing IDs across all outfits
+    const allIds = [...new Set(saved.flatMap((o) => o.clothingIds || []))];
+    
+    // Single batch request instead of N individual requests
+    const allItems = allIds.length > 0 ? await getClothingBatch(allIds) : [];
+    const itemMap = new Map(allItems.map((item) => [item.id, item]));
+
+    const enriched = saved.map((outfit) => ({
+      ...outfit,
+      name: outfit.name || 'Saved Outfit',
+      reasoning: outfit.aiReasoning,
+      styleNotes: outfit.styleNotes,
+      items: (outfit.clothingIds || [])
+        .map((id) => itemMap.get(id))
+        .filter(Boolean),
+    }));
 
     setOutfits(enriched);
     setLoading(false);
   }
 
   async function handleDelete(outfitId) {
-    await deleteOutfit(outfitId);
+    // Optimistic UI: remove instantly, then fire API call
     setOutfits((prev) => prev.filter((o) => o.id !== outfitId));
     showToast('Outfit removed');
+    try {
+      await deleteOutfit(outfitId);
+    } catch {
+      // Silently fail — item already removed from UI
+    }
   }
 
   if (loading) {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getAllClothing, saveOutfit } from '../db';
+import { getAllClothingSummary, saveOutfit } from '../db';
 import { suggestOutfits, chatFollowUp } from '../services/geminiService';
 import OutfitCard from './OutfitCard';
 
@@ -29,7 +29,7 @@ export default function SuggestPage({ hasApiKey, clothingCount, onOpenSettings, 
   }, []);
 
   async function loadClothing() {
-    const items = await getAllClothing();
+    const items = await getAllClothingSummary();
     setClothing(items);
   }
 

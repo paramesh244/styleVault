@@ -17,9 +17,9 @@ export default function ClothingCard({ item, onClick }) {
   return (
     <div className="group cursor-pointer" onClick={onClick} id={`clothing-${item.id}`}>
       <div className="aspect-[3/4] bg-gray-50 overflow-hidden mb-2 relative">
-        {item.imageDataUrl ? (
+        {(item.thumbnailDataUrl || item.imageDataUrl) ? (
           <img 
-            src={item.imageDataUrl || item.thumbnailDataUrl} 
+            src={item.thumbnailDataUrl || item.imageDataUrl} 
             alt={item.name || 'Clothing item'} 
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             loading="lazy"

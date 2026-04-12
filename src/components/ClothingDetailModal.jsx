@@ -1,9 +1,23 @@
-import { deleteClothing } from '../db';
-import { useState } from 'react';
+import { deleteClothing, getClothingById } from '../db';
+import { useState, useEffect } from 'react';
 
 export default function ClothingDetailModal({ clothing, onClose, onDelete, showToast }) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [fullImageUrl, setFullImageUrl] = useState(clothing.imageDataUrl || null);
+
+  // Fetch the full item (with imageDataUrl) if we only have the summary
+  useEffect(() => {
+    if (!clothing.imageDataUrl && clothing.id) {
+      getClothingById(clothing.id).then((full) => {
+        if (full?.imageDataUrl) {
+          setFullImageUrl(full.imageDataUrl);
+        }
+      });
+    }
+  }, [clothing.id, clothing.imageDataUrl]);
+
+  const heroImage = fullImageUrl || clothing.thumbnailDataUrl;
 
   async function handleDelete() {
     setDeleting(true);
@@ -31,8 +45,8 @@ export default function ClothingDetailModal({ clothing, onClose, onDelete, showT
           
           {/* Hero Image */}
           <div className="w-full aspect-[3/4] bg-gray-100 relative">
-            {clothing.imageDataUrl ? (
-              <img src={clothing.imageDataUrl} alt={clothing.name} className="w-full h-full object-cover" />
+            {heroImage ? (
+              <img src={heroImage} alt={clothing.name} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-6xl">👗</div>
             )}

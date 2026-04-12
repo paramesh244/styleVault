@@ -163,9 +163,41 @@ const Setting  = mongoose.models.Setting  || mongoose.model('Setting', settingSc
 
 // ─── Clothing Routes ─────────────────────────────────────────
 
+// Full list (kept for backward compat, but prefer /summary for grid views)
 app.get('/api/clothes', async (req, res) => {
   try {
     const items = await Clothing.find({ uid: req.uid }).sort({ createdAt: -1 }).lean();
+    const mapped = items.map((item) => ({ ...item, id: item._id.toString() }));
+    res.json(mapped);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Lightweight list — excludes the heavy imageDataUrl field (thumbnails only)
+app.get('/api/clothes/summary', async (req, res) => {
+  try {
+    const items = await Clothing.find({ uid: req.uid })
+      .sort({ createdAt: -1 })
+      .select('-imageDataUrl')
+      .lean();
+    const mapped = items.map((item) => ({ ...item, id: item._id.toString() }));
+    res.json(mapped);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Batch fetch by IDs — avoids N+1 individual requests
+app.post('/api/clothes/batch', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids)) {
+      return res.status(400).json({ error: 'ids array required' });
+    }
+    const items = await Clothing.find({ _id: { $in: ids }, uid: req.uid })
+      .select('-imageDataUrl')
+      .lean();
     const mapped = items.map((item) => ({ ...item, id: item._id.toString() }));
     res.json(mapped);
   } catch (err) {
@@ -220,15 +252,28 @@ app.delete('/api/clothes/:id', async (req, res) => {
     const deletedId = req.params.id;
     await Clothing.findOneAndDelete({ _id: deletedId, uid: req.uid });
 
-    const outfits = await Outfit.find({ uid: req.uid, clothingIds: deletedId });
+    // Cascade: bulk-remove from outfits (single query instead of N queries)
+    const outfits = await Outfit.find({ uid: req.uid, clothingIds: deletedId }).lean();
+    const toDelete = [];
+    const toUpdate = [];
     for (const outfit of outfits) {
       const newIds = outfit.clothingIds.filter((cid) => cid !== deletedId);
       if (newIds.length < 2) {
-        await Outfit.findByIdAndDelete(outfit._id);
+        toDelete.push(outfit._id);
       } else {
-        outfit.clothingIds = newIds;
-        await outfit.save();
+        toUpdate.push({ _id: outfit._id, clothingIds: newIds });
       }
+    }
+
+    const ops = [];
+    if (toDelete.length > 0) {
+      ops.push({ deleteMany: { filter: { _id: { $in: toDelete } } } });
+    }
+    for (const u of toUpdate) {
+      ops.push({ updateOne: { filter: { _id: u._id }, update: { $set: { clothingIds: u.clothingIds } } } });
+    }
+    if (ops.length > 0) {
+      await Outfit.bulkWrite(ops);
     }
 
     res.json({ success: true });
