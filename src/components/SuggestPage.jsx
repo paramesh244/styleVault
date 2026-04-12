@@ -244,59 +244,70 @@ export default function SuggestPage({ hasApiKey, clothingCount, onOpenSettings, 
 
   // Request/Prompt View
   return (
-    <div className="px-6 pt-6 pb-32">
-      <header className="mb-10">
-        <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A059] font-bold mb-3 block">Style Guidance</span>
-        <h1 className="text-4xl leading-tight font-black tracking-tight mb-2 editorial-font">
-          What's the <br/><span className="italic">Occasion?</span>
-        </h1>
-        <p className="text-gray-500 text-sm leading-relaxed">
-          Tell us where you're headed for a curated look.
-        </p>
-      </header>
+    <div className="flex flex-col min-h-full">
+      <div className="px-6 pt-6 pb-8 flex-1">
+        <header className="mb-10">
+          <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A059] font-bold mb-3 block">Style Guidance</span>
+          <h1 className="text-4xl leading-tight font-black tracking-tight mb-2 editorial-font">
+            What's the <br/><span className="italic">Occasion?</span>
+          </h1>
+          <p className="text-gray-500 text-sm leading-relaxed">
+            Tell us where you're headed for a curated look.
+          </p>
+        </header>
 
-      <div className="grid grid-cols-2 gap-4 mb-12">
-        {OCCASIONS.map((occ) => (
-          <button 
-            key={occ.id}
-            onClick={() => {
-              setSelectedOccasion(selectedOccasion === occ.id ? null : occ.id);
-              setCustomRequest('');
-            }}
-            className={`flex flex-col items-start p-5 border transition-all duration-300 ${
-              selectedOccasion === occ.id 
-                ? 'bg-[#F8F4EA] border-[#C5A059]' 
-                : 'bg-white border-gray-100'
-            }`}
-          >
-            <iconify-icon icon={occ.icon} class="text-[#C5A059] text-xl mb-4"></iconify-icon>
-            <span className="text-xs uppercase font-bold tracking-widest">{occ.label}</span>
-          </button>
-        ))}
-      </div>
-
-      <div className="flex items-center gap-4 mb-10">
-        <div className="flex-1 h-[1px] bg-gray-100"></div>
-        <span className="text-[10px] uppercase font-bold tracking-[0.3em] text-gray-300">OR</span>
-        <div className="flex-1 h-[1px] bg-gray-100"></div>
-      </div>
-
-      <section className="space-y-6">
-        <div className="space-y-3">
-          <h2 className="editorial-font text-lg font-bold italic text-[#1A1A1A]">Custom Request</h2>
-          <div className="relative">
-            <textarea 
-              value={customRequest}
-              onChange={(e) => {
-                setCustomRequest(e.target.value);
-                setSelectedOccasion(null);
+        <div className="grid grid-cols-2 gap-4 mb-12">
+          {OCCASIONS.map((occ) => (
+            <button 
+              key={occ.id}
+              onClick={() => {
+                setSelectedOccasion(selectedOccasion === occ.id ? null : occ.id);
+                setCustomRequest('');
               }}
-              placeholder="e.g. A gallery opening in Soho, it's raining but warm..."
-              className="w-full h-32 p-4 bg-gray-50 border border-gray-100 focus:border-[#C5A059] outline-none text-sm leading-relaxed transition-colors resize-none"
-            ></textarea>
-          </div>
+              className={`flex flex-col items-start p-5 border transition-all duration-300 ${
+                selectedOccasion === occ.id 
+                  ? 'bg-[#F8F4EA] border-[#C5A059]' 
+                  : 'bg-white border-gray-100'
+              }`}
+            >
+              <iconify-icon icon={occ.icon} class="text-[#C5A059] text-xl mb-4"></iconify-icon>
+              <span className="text-xs uppercase font-bold tracking-widest">{occ.label}</span>
+            </button>
+          ))}
         </div>
 
+        <div className="flex items-center gap-4 mb-10">
+          <div className="flex-1 h-[1px] bg-gray-100"></div>
+          <span className="text-[10px] uppercase font-bold tracking-[0.3em] text-gray-300">OR</span>
+          <div className="flex-1 h-[1px] bg-gray-100"></div>
+        </div>
+
+        <section className="space-y-6">
+          <div className="space-y-3">
+            <h2 className="editorial-font text-lg font-bold italic text-[#1A1A1A]">Custom Request</h2>
+            <div className="relative">
+              <textarea 
+                value={customRequest}
+                onChange={(e) => {
+                  setCustomRequest(e.target.value);
+                  setSelectedOccasion(null);
+                }}
+                placeholder="e.g. A gallery opening in Soho, it's raining but warm..."
+                className="w-full h-32 p-4 bg-gray-50 border border-gray-100 focus:border-[#C5A059] outline-none text-sm leading-relaxed transition-colors resize-none"
+              ></textarea>
+            </div>
+          </div>
+        </section>
+
+        <div className="mt-8 flex items-start gap-4 p-4 border border-[#C5A059]/10 bg-[#C5A059]/5">
+          <iconify-icon icon="lucide:info" class="text-[#C5A059] mt-1"></iconify-icon>
+          <p className="text-[11px] text-[#1A1A1A] font-medium leading-tight italic">
+            Tip: Mentioning details like weather, venue, or mood helps AURA provide more accurate styling.
+          </p>
+        </div>
+      </div>
+
+      <footer className="sticky bottom-0 px-6 py-6 bg-white border-t border-gray-100 z-10 shadow-[0_-10px_40px_rgba(255,255,255,1)]">
         <button 
           onClick={handleSuggest}
           disabled={!selectedOccasion && !customRequest.trim()}
@@ -305,14 +316,7 @@ export default function SuggestPage({ hasApiKey, clothingCount, onOpenSettings, 
           Get AI Suggestion
           <iconify-icon icon="lucide:wand-2" class="text-sm text-[#C5A059]"></iconify-icon>
         </button>
-      </section>
-
-      <div className="mt-12 flex items-start gap-4 p-4 border border-[#C5A059]/10 bg-[#C5A059]/5">
-        <iconify-icon icon="lucide:info" class="text-[#C5A059] mt-1"></iconify-icon>
-        <p className="text-[11px] text-[#1A1A1A] font-medium leading-tight italic">
-          Tip: Mentioning details like weather, venue, or mood helps AURA provide more accurate styling.
-        </p>
-      </div>
+      </footer>
     </div>
   );
 }

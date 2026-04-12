@@ -19,7 +19,7 @@ export default function ClothingCard({ item, onClick }) {
       <div className="aspect-[3/4] bg-gray-50 overflow-hidden mb-2 relative">
         {item.imageDataUrl ? (
           <img 
-            src={item.thumbnailDataUrl || item.imageDataUrl} 
+            src={item.imageDataUrl || item.thumbnailDataUrl} 
             alt={item.name || 'Clothing item'} 
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             loading="lazy"
