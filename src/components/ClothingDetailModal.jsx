@@ -46,6 +46,7 @@ export default function ClothingDetailModal({ clothing, onClose, onDelete, showT
           <DetailItem label="Pattern" value={clothing.pattern} />
           <DetailItem label="Material" value={clothing.material} />
           <DetailItem label="Formality" value={clothing.formality} />
+          <DetailItem label="Fit" value={clothing.fit} />
         </div>
 
         {/* Colors */}
@@ -88,7 +89,7 @@ export default function ClothingDetailModal({ clothing, onClose, onDelete, showT
 
         {/* AI Description */}
         {clothing.description && (
-          <div style={{ marginBottom: 20 }}>
+          <div style={{ marginBottom: 16 }}>
             <div className="input-label">AI Description</div>
             <div style={{
               padding: 12,
@@ -100,6 +101,37 @@ export default function ClothingDetailModal({ clothing, onClose, onDelete, showT
             }}>
               {clothing.description}
             </div>
+          </div>
+        )}
+
+        {/* AI Insights */}
+        {(clothing.versatility > 0 || (clothing.pairsWith && clothing.pairsWith.length > 0) || clothing.careInstructions) && (
+          <div style={{
+            marginBottom: 20,
+            padding: '10px 14px',
+            background: 'rgba(168, 85, 247, 0.06)',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid rgba(168, 85, 247, 0.1)',
+            fontSize: '0.85rem',
+            color: 'var(--text-secondary)',
+            lineHeight: 1.6,
+          }}>
+            <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>✨ AI Insights</div>
+            {clothing.versatility > 0 && (
+              <div style={{ marginBottom: 4 }}>
+                <strong>Versatility:</strong> {clothing.versatility}/10 — {clothing.versatility >= 7 ? 'A wardrobe workhorse!' : clothing.versatility >= 4 ? 'Good for several looks' : 'Statement piece'}
+              </div>
+            )}
+            {clothing.pairsWith && clothing.pairsWith.length > 0 && (
+              <div style={{ marginBottom: 4 }}>
+                <strong>Pairs well with:</strong> {clothing.pairsWith.join(', ')}
+              </div>
+            )}
+            {clothing.careInstructions && (
+              <div>
+                <strong>Care:</strong> {clothing.careInstructions}
+              </div>
+            )}
           </div>
         )}
 
