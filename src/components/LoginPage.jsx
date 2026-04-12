@@ -32,24 +32,24 @@ export default function LoginPage() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto no-scrollbar relative w-full h-full">
-        
+
         {/* Hero Section */}
         <section className="px-6 pt-10 pb-8">
           <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A059] font-bold mb-3 block">
             The Future of Dressing
           </span>
           <h1 className="text-[46px] leading-[1.05] font-black tracking-tight mb-6 editorial-font">
-            Your <span className="italic">Personal</span><br/>
+            Your <span className="italic">Personal</span><br />
             AI Stylist.
           </h1>
           <p className="text-gray-500 text-base leading-relaxed mb-8 max-w-[280px]">
             Unlock the full potential of your wardrobe with editorial-grade AI styling.
           </p>
-          
+
           <div className="relative w-full aspect-[4/5] bg-gray-50 overflow-hidden group">
-            <img 
-              src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop" 
-              alt="Fashion Concept" 
+            <img
+              src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop"
+              alt="Fashion Concept"
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-black/5"></div>
@@ -72,7 +72,7 @@ export default function LoginPage() {
           <h2 className="text-2xl font-bold editorial-font mb-10 text-center">
             Elevated Intelligence
           </h2>
-          
+
           <div className="space-y-10">
             {/* Feature 1 */}
             <div className="flex gap-6">
@@ -118,7 +118,7 @@ export default function LoginPage() {
         {/* Quote Section */}
         <section className="px-6 py-16 bg-[#1A1A1A] text-white text-center overflow-hidden relative">
           <div className="absolute top-0 left-0 w-full h-full opacity-10">
-             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#C5A059_0%,_transparent_70%)]"></div>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#C5A059_0%,_transparent_70%)]"></div>
           </div>
           <iconify-icon icon="ri:double-quotes-l" class="text-3xl text-[#C5A059] mb-4"></iconify-icon>
           <p className="text-2xl editorial-font italic leading-snug mb-6 relative z-10">
@@ -138,26 +138,27 @@ export default function LoginPage() {
             {error}
           </div>
         )}
-        <button 
+        <button
           id="get-started-btn"
-          onClick={handleGoogleLogin} 
+          onClick={handleGoogleLogin}
           disabled={loading}
           className="w-full h-14 bg-[#1A1A1A] text-white flex items-center justify-center gap-2 font-bold tracking-widest text-xs uppercase transition-all active:scale-[0.98] disabled:opacity-50"
         >
           {loading ? (
             <>
-               <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2, borderColor: 'rgba(255,255,255,0.2)', borderTopColor: 'currentColor' }} />
-               Starting...
+              <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2, borderColor: 'rgba(255,255,255,0.2)', borderTopColor: 'currentColor' }} />
+              Starting...
             </>
           ) : (
             <>
-              Get Started (Google)
-              <iconify-icon icon="lucide:arrow-right" class="text-sm"></iconify-icon>
+              <iconify-icon icon="logos:google-icon" class="text-sm mr-1"></iconify-icon>
+              Get Started
+              <iconify-icon icon="lucide:arrow-right" class="text-sm ml-1"></iconify-icon>
             </>
           )}
         </button>
-        <button 
-          id="explore-features-btn" 
+        <button
+          id="explore-features-btn"
           onClick={() => {
             const section = document.getElementById('features-section');
             if (section) section.scrollIntoView({ behavior: 'smooth' });
